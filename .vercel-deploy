@@ -1,0 +1,7 @@
+Deploy forcado em 2026-06-01T20:00 para garantir build limpo com:
+- MVP sprites via divine-pride.net CDN
+- Status alive por padrao
+- Botao inimigo com horario
+- Nome legivel dos mapas
+- Fix TS: alive no StatusBadge, KillLog removido do MVPCard
+- Gemini 1.5-flash com tratamento de 429
