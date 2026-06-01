@@ -1,7 +1,6 @@
 /**
  * MVP images via Vercel proxy /api/monster-img/:id
- * O vercel.json faz rewrite server-side para divine-pride.net,
- * bypassando o hotlink protection que bloqueia requests do browser.
+ * Proxy aponta para static.divine-pride.net/images/mobs/gif/:id.gif
  */
 export const MVP_IMAGES: Record<string, string> = {
   'Orc Hero':         '/api/monster-img/1087',
