@@ -1,78 +1,57 @@
-# 🐉 TRUEMMO MVP Timer
+# Ragnarok MVP Timer — TRUEMMO
 
-MVP respawn tracker for the TRUEMMO private server — with clan log, realtime sync and AI-powered target suggestions.
+Timer de MVP compartilhado para o servidor TRUEMMO.
+Roda 100% na nuvem (Vercel + Supabase + Gemini) — sem precisar abrir nada local no PC.
 
-## ✨ Features
+## Stack
+- **React 18 + TypeScript + Vite**
+- **Tailwind CSS** com tema dark Ragnarok
+- **Supabase** — banco PostgreSQL + Realtime (logs em tempo real)
+- **Google Gemini 2.0 Flash** — sugestão de melhor alvo
+- **Deploy:** Vercel ou Netlify
 
-- ⏱️ **MVP Timer** — track respawn windows (min/max) for all MVPs
-- 👥 **Clan Log** — shared kill log per group (who killed, when, where)
-- 🤖 **AI Suggestions** — Gemini AI recommends the best MVP target at any moment
-- 🔐 **Auth** — login via Supabase (email or magic link)
-- 🌐 **Cloud-only** — runs on Vercel + Supabase, no local server needed
+## Features
+- ⏱ Timer de janela de respawn (mínimo e máximo) para 14 MVPs
+- 🟢 Status visual: Longe / Em breve / Janela aberta / Passou da janela
+- ⚔️ Registro de kill com killer e observações
+- 📡 Log compartilhado por grupo via Supabase Realtime
+- 🤖 Sugestão de alvo com Gemini (analisa todos os timers)
+- 💾 Fallback localStorage se Supabase não configurado
 
-## 🏗️ Stack
+## Setup local
 
-| Layer | Tech |
-|---|---|
-| Frontend | React 18 + Vite + TypeScript |
-| Styling | Tailwind CSS v3 |
-| Backend/DB | Supabase (PostgreSQL + Auth + Realtime) |
-| AI | Google Gemini 1.5 Flash (free tier) |
-| Deploy | Vercel |
-
-## 🚀 Getting Started
-
-### 1. Clone the repo
-```bash
-git clone https://github.com/IsraelSiq/truemmo-mvp-timer.git
-cd truemmo-mvp-timer
-```
-
-### 2. Install dependencies
 ```bash
 npm install
-```
-
-### 3. Configure environment variables
-```bash
-cp .env.example .env.local
-# fill in your Supabase and Gemini keys
-```
-
-### 4. Run the database migrations
-Apply the SQL files in `supabase/migrations/` to your Supabase project.
-
-### 5. Start dev server
-```bash
+cp .env.example .env
+# Preencha as variáveis no .env
 npm run dev
 ```
 
-## 📁 Project Structure
+## Deploy no Vercel
 
-```
-truemmo-mvp-timer/
-├── src/
-│   ├── components/       # UI components
-│   ├── pages/            # Route pages
-│   ├── hooks/            # Custom React hooks
-│   ├── lib/              # Supabase client, Gemini client
-│   ├── data/             # Static MVP data (TRUEMMO specific)
-│   ├── types/            # TypeScript types
-│   └── utils/            # Helper functions (respawn calc, etc.)
-├── supabase/
-│   └── migrations/       # SQL schema files
-├── public/
-└── docs/                 # Architecture and ADR docs
-```
+1. Conecte o repositório ao Vercel
+2. Adicione as variáveis de ambiente:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_GEMINI_API_KEY`
+3. Deploy — acesse a URL fora do PC de jogo
 
-## 🗺️ Roadmap
+## Configurar Supabase
 
-See [GitHub Issues](https://github.com/IsraelSiq/truemmo-mvp-timer/issues) organized by milestone.
+1. Crie um projeto em [supabase.com](https://supabase.com)
+2. Rode `supabase/schema.sql` no SQL Editor
+3. Habilite Realtime para a tabela `mvp_kills`
 
-## ⚠️ Important — Gepard Shield
+## Configurar Gemini
 
-This app is intentionally cloud-deployed (Vercel). **Do not run a local backend or dev server** while playing on TRUEMMO, as Gepard Shield may detect and block suspicious processes.
+1. [Google AI Studio](https://aistudio.google.com) → crie uma API key
+2. Adicione como `VITE_GEMINI_API_KEY`
 
-## 📄 License
+## ⚠️ Segurança
+Para produção, mova a chamada Gemini para uma Vercel Serverless Function.
 
-MIT
+## Próximas evoluções
+- [ ] Auth por convite de grupo
+- [ ] Ranking de kills por player
+- [ ] Histórico filtrável por data
+- [ ] Push notification quando janela abre

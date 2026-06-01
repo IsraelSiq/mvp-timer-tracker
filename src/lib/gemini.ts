@@ -1,51 +1,44 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import type { TimerWithDef } from '@/types'
+import type { EnrichedMVP } from '@/types'
+import { formatDateTime } from '@/utils/timer'
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string
+export async function askGemini(mvps: EnrichedMVP[]): Promise<string> {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string
+  if (!apiKey) return '⚠️ VITE_GEMINI_API_KEY não configurada. Adicione no .env e faça redeploy.'
 
-if (!apiKey) {
-  console.warn('[gemini] VITE_GEMINI_API_KEY not set — AI suggestions disabled')
-}
+  const snapshot = mvps.slice(0, 10).map(item => ({
+    name: item.name,
+    map: item.map,
+    status: item.status,
+    minRespawn: item.minRespawnDate ? formatDateTime(item.minRespawnDate) : 'sem registro',
+    maxRespawn: item.maxRespawnDate ? formatDateTime(item.maxRespawnDate) : 'sem registro',
+    priority: item.priority,
+    notes: item.notes,
+    lastKiller: item.latest?.killer ?? 'sem info',
+  }))
 
-const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null
+  const prompt = `Você é um analista de rota de MVP para Ragnarok Online no servidor privado TRUEMMO.
+Responda em português do Brasil, de forma objetiva e direta.
+Considere: prioridade do boss, status da janela de respawn, chance de disputa e praticidade de deslocamento.
+Indique: 1) o MELHOR alvo agora com justificativa rápida; 2) no máximo 2 alternativas.
+Dados atuais dos timers: ${JSON.stringify(snapshot)}`
 
-/**
- * Asks Gemini to suggest the best MVP target given the current active timers.
- * Returns a structured suggestion or null if AI is unavailable.
- */
-export async function getSuggestion(
-  timers: TimerWithDef[],
-  userName: string,
-): Promise<string | null> {
-  if (!genAI) return null
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    }
+  )
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-
-  const timerSummary = timers
-    .map(t => {
-      const minutesLeft = Math.round(
-        (new Date(t.windowStart).getTime() - Date.now()) / 60000
-      )
-      return `- ${t.definition.name} (${t.definition.mapLabel}): janela em ${minutesLeft > 0 ? minutesLeft + 'min' : 'ABERTA AGORA'}, drops valiosos: ${t.definition.drops?.filter(d => d.isHighValue).map(d => d.itemName).join(', ') || 'nenhum registrado'}`
-    })
-    .join('\n')
-
-  const prompt = `
-Você é um assistente especialista em Ragnarok Online para o servidor privado TRUEMMO.
-O jogador "${userName}" quer saber qual MVP caçar agora.
-
-Status atual dos timers:
-${timerSummary}
-
-Considerando janelas de respawn, valor dos drops e urgência, sugira o melhor alvo agora.
-Seja direto e objetivo, máximo 3 frases. Fale em português.
-`.trim()
-
-  try {
-    const result = await model.generateContent(prompt)
-    return result.response.text()
-  } catch (err) {
-    console.error('[gemini] Error generating suggestion:', err)
-    return null
+  if (!res.ok) {
+    const err = await res.text()
+    return `Erro na API Gemini: ${res.status} — ${err}`
   }
+
+  const data = await res.json()
+  return (
+    data?.candidates?.[0]?.content?.parts?.map((p: { text: string }) => p.text).join('\n') ??
+    'Gemini não retornou sugestão.'
+  )
 }

@@ -1,15 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-rag-bg text-rag-text font-body;
-  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { @apply bg-rag-bg text-rag-text font-body; -webkit-font-smoothing: antialiased; }
+  ::selection { @apply bg-rag-accent/30 text-rag-text; }
+  :focus-visible { @apply outline-2 outline-rag-accent outline-offset-2 rounded-sm; }
 }
 
 @layer utilities {
-  .timer-glow-red    { text-shadow: 0 0 12px rgba(192, 57, 43, 0.8); }
-  .timer-glow-gold   { text-shadow: 0 0 12px rgba(241, 196, 15, 0.8); }
-  .timer-glow-green  { text-shadow: 0 0 12px rgba(39, 174, 96, 0.6); }
+  .tabular-nums { font-variant-numeric: tabular-nums lining-nums; }
 }

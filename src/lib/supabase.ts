@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from './database.types'
 
-const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL  as string
-const supabaseKey  = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+const url  = import.meta.env.VITE_SUPABASE_URL  as string
+const key  = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('[supabase] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env.local')
+if (!url || !key) {
+  console.warn('[Supabase] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set. Realtime sync disabled.')
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+export const supabase = url && key ? createClient(url, key) : null
