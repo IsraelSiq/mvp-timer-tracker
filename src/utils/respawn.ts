@@ -1,5 +1,5 @@
-import { addMinutes, isAfter, isBefore } from 'date-fns'
-import type { MvpStatus } from '@/types'
+import { addMinutes, isAfter } from 'date-fns'
+import type { KillStatus } from '@/types'
 
 /**
  * Calculates respawn window timestamps from a kill time.
@@ -18,14 +18,14 @@ export function calcWindow(killedAt: Date | string, minRespawn: number, maxRespa
 export function getTimerStatus(
   windowStart: Date | string,
   windowEnd:   Date | string,
-): MvpStatus {
+): KillStatus {
   const now   = new Date()
   const start = new Date(windowStart)
   const end   = new Date(windowEnd)
 
-  if (isAfter(now, end))   return 'alive'   // window passed — MVP alive & roaming or re-killed
-  if (isAfter(now, start)) return 'window'  // inside window — could spawn any moment
-  return 'dead'                             // window not started yet — definitely dead
+  if (isAfter(now, end))   return 'window-passed'
+  if (isAfter(now, start)) return 'window-open'
+  return 'far'
 }
 
 /**
