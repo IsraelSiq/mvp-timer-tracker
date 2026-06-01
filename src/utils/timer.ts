@@ -1,7 +1,8 @@
 import type { KillLog, KillStatus, EnrichedMVP, MVP } from '@/types'
 
 export function getStatus(killAt: string | null, min: number, max: number, now: number): KillStatus {
-  if (!killAt) return 'no-record'
+  // No record = assume alive and roaming (not "unknown")
+  if (!killAt) return 'alive'
   const minTime = new Date(killAt).getTime() + min * 60_000
   const maxTime = new Date(killAt).getTime() + max * 60_000
   if (now < minTime) {
@@ -39,10 +40,12 @@ export function enrichMVP(mvp: MVP, logs: KillLog[], now: number): EnrichedMVP {
   const elapsedSinceMin = latest
     ? now - (new Date(latest.killed_at).getTime() + mvp.minRespawn * 60_000)
     : 0
-  const windowProgress = latest ? Math.min(100, Math.max(0, (elapsedSinceMin / totalWindowMs) * 100)) : 0
+  const windowProgress = latest
+    ? Math.min(100, Math.max(0, (elapsedSinceMin / totalWindowMs) * 100))
+    : 0
 
   const score = (() => {
-    if (!latest) return 0
+    if (!latest) return mvp.priority * 3  // alive = moderate score, sorted by priority
     if (status === 'window-open')  return 100 + mvp.priority * 10
     if (status === 'soon')         return 70  + mvp.priority * 8
     if (status === 'far')          return 25  + mvp.priority * 5

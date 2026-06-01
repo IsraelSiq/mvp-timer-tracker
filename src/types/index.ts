@@ -9,7 +9,8 @@ export interface MVP {
 }
 
 export type KillStatus =
-  | 'no-record'
+  | 'alive'         // no record — assumed alive/roaming
+  | 'no-record'     // legacy alias, treated same as alive
   | 'far'
   | 'soon'
   | 'window-open'
@@ -24,6 +25,7 @@ export interface KillLog {
   note: string
   group_name: string
   created_at?: string
+  killed_by_enemy?: boolean  // true = killed by rival guild, not us
 }
 
 export interface EnrichedMVP extends MVP {

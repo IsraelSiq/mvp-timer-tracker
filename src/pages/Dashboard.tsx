@@ -9,17 +9,17 @@ import { MVPCard } from '@/components/MVPCard'
 import { KillModal } from '@/components/KillModal'
 import { AISuggestion } from '@/components/AISuggestion'
 import { KillLogPanel } from '@/components/KillLog'
-import type { EnrichedMVP, KillStatus } from '@/types'
+import type { EnrichedMVP, KillLog, KillStatus } from '@/types'
 import toast from 'react-hot-toast'
 
 type StatusFilter = 'all' | KillStatus
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
   { value: 'all',           label: 'Todos' },
-  { value: 'window-open',   label: '🟢 Janela aberta' },
+  { value: 'alive',         label: '🟢 Vivo' },
+  { value: 'window-open',   label: '🟡 Janela aberta' },
   { value: 'soon',          label: '⏳ Em breve' },
   { value: 'far',           label: 'Longe' },
-  { value: 'no-record',     label: 'Sem registro' },
   { value: 'window-passed', label: 'Passou' },
 ]
 
@@ -43,7 +43,11 @@ export function Dashboard() {
   }, [kills, now, query])
 
   const filtered = useMemo(() =>
-    statusFilter === 'all' ? enriched : enriched.filter(e => e.status === statusFilter)
+    statusFilter === 'all' ? enriched : enriched.filter(e =>
+      statusFilter === 'alive'
+        ? e.status === 'alive' || e.status === 'no-record'
+        : e.status === statusFilter
+    )
   , [enriched, statusFilter])
 
   const openCount = enriched.filter(e => e.status === 'window-open').length
@@ -77,6 +81,20 @@ export function Dashboard() {
     clearLocal()
     setConfirmClear(false)
     toast.success('Registros locais apagados.')
+  }
+
+  function handleEnemyKill(item: EnrichedMVP, killedAt: string) {
+    const log: KillLog = {
+      mvp_id:          item.id,
+      mvp_name:        item.name,
+      killer:          'Inimigo',
+      killed_at:       killedAt,
+      note:            'Morto por guild inimiga.',
+      group_name:      groupName,
+      killed_by_enemy: true,
+    }
+    addKill(log)
+    toast.success(`${item.name} marcado como morto por inimigo. Respawn em ${item.minRespawn}–${item.maxRespawn} min.`, { icon: '⚡' })
   }
 
   return (
@@ -172,7 +190,11 @@ export function Dashboard() {
               {tab.label}
               {tab.value !== 'all' && (
                 <span className="ml-1.5 text-rag-muted/70">
-                  ({enriched.filter(e => e.status === tab.value).length})
+                  ({enriched.filter(e =>
+                    tab.value === 'alive'
+                      ? e.status === 'alive' || e.status === 'no-record'
+                      : e.status === tab.value
+                  ).length})
                 </span>
               )}
             </button>
@@ -187,7 +209,13 @@ export function Dashboard() {
               </div>
             ) : (
               filtered.map(item => (
-                <MVPCard key={item.id} item={item} now={now} onKill={setSelected} />
+                <MVPCard
+                  key={item.id}
+                  item={item}
+                  now={now}
+                  onKill={setSelected}
+                  onEnemyKill={handleEnemyKill}
+                />
               ))
             )}
           </div>
