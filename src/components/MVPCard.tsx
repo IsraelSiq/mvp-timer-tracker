@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Swords, Skull, MapPin } from 'lucide-react'
-import type { EnrichedMVP, KillLog } from '@/types'
+import type { EnrichedMVP } from '@/types'
 import { StatusBadge } from './StatusBadge'
 import { formatRemaining, formatDateTime } from '@/utils/timer'
 import { getMapName } from '@/data/mapNames'
@@ -26,7 +26,6 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
   const maxRemaining = item.maxRespawnDate ? item.maxRespawnDate.getTime() - now : 0
   const imgSrc = getMvpImage(item.name)
 
-  // Inline enemy kill form state
   const [showEnemyForm, setShowEnemyForm] = useState(false)
   const [enemyTime,     setEnemyTime]     = useState(() => toLocalDatetimeInput(new Date()))
 
@@ -54,11 +53,9 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
         ) : (
           <Skull size={40} className="text-rag-muted/30" />
         )}
-        {/* status badge overlay */}
         <div className="absolute top-2 right-2">
           <StatusBadge status={item.status} />
         </div>
-        {/* priority badge */}
         <div className="absolute top-2 left-2">
           <span className="text-xs px-1.5 py-0.5 rounded bg-rag-surface/80 border border-rag-border text-rag-muted">
             P{item.priority}
@@ -67,7 +64,6 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
       </div>
 
       <div className="p-4 flex flex-col gap-3">
-        {/* Name + map */}
         <div>
           <h3 className="font-body font-semibold text-rag-text text-base leading-tight">{item.name}</h3>
           <span className="flex items-center gap-1 text-rag-blue text-xs font-medium mt-0.5">
@@ -81,7 +77,6 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
           </span>
         </div>
 
-        {/* Timer grid — only if we have a record */}
         {!isAlive && (
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-rag-bg rounded-lg p-2 border border-rag-border">
@@ -99,14 +94,12 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
           </div>
         )}
 
-        {/* Alive state message */}
         {isAlive && (
           <p className="text-green-400 text-xs font-medium">
             🟢 Vivo — nenhum registro de morte.
           </p>
         )}
 
-        {/* Progress bar */}
         {!isAlive && (
           <div className="h-1.5 bg-rag-bg rounded-full overflow-hidden border border-rag-border">
             <div
@@ -121,10 +114,9 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
           </div>
         )}
 
-        {/* Last kill info */}
         <p className="text-rag-muted text-xs">
           {item.latest
-            ? <>{ item.latest.killed_by_enemy
+            ? <>{item.latest.killed_by_enemy
                 ? <span className="text-orange-400">⚡ Morto por inimigo</span>
                 : <span>Kill: {item.latest.killer}</span>
               } — {formatDateTime(item.latest.killed_at)}</>
@@ -133,7 +125,6 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
 
         <p className="text-rag-muted/70 text-xs italic">{item.notes}</p>
 
-        {/* Enemy kill inline form */}
         {showEnemyForm && (
           <div className="flex flex-col gap-2 bg-rag-bg border border-rag-border rounded-lg p-3">
             <label className="text-rag-muted text-xs">Hora que o inimigo matou:</label>
@@ -160,7 +151,6 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
           </div>
         )}
 
-        {/* Action buttons */}
         <div className="flex gap-2">
           <button
             onClick={() => onKill(item)}
