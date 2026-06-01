@@ -7,7 +7,6 @@ const MODELS = [
   'gemini-1.5-flash-latest',
 ]
 
-/** Sugestão calculada localmente quando a IA estiver indisponível */
 function localSuggestion(mvps: EnrichedMVP[]): string {
   const open  = mvps.filter(m => m.status === 'window-open').sort((a, b) => b.priority - a.priority)
   const soon  = mvps.filter(m => m.status === 'soon').sort((a, b) => b.priority - a.priority)
@@ -36,16 +35,6 @@ function localSuggestion(mvps: EnrichedMVP[]): string {
     ``,
     `⚠️ Para ativar IA real: ative billing no projeto em aistudio.google.com`,
   ].filter(Boolean).join('\n')
-}
-
-function parseRetryDelay(body: string): number | null {
-  try {
-    const json = JSON.parse(body)
-    const rd = json?.error?.details?.find(
-      (d: { '@type': string }) => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo'
-    )?.retryDelay as string | undefined
-    return rd ? Math.ceil(parseFloat(rd)) : null
-  } catch { return null }
 }
 
 async function tryModel(model: string, prompt: string, apiKey: string) {
