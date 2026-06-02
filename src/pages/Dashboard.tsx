@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Shield, Radio, Search, LogIn, LogOut, User } from 'lucide-react'
+import { Shield, Radio, Search, LogIn, LogOut, User, Zap } from 'lucide-react'
 import { MVP_LIST } from '@/data/mvps'
 import { enrichMVP } from '@/utils/timer'
 import { goalScore } from '@/utils/goalSort'
@@ -13,6 +13,7 @@ import { AISuggestion } from '@/components/AISuggestion'
 import { KillLogPanel } from '@/components/KillLog'
 import { GoalSelector } from '@/components/GoalSelector'
 import { AuthModal } from '@/components/AuthModal'
+import { SkillChangesPanel } from '@/components/SkillChangesPanel'
 import type { EnrichedMVP, KillLog, KillStatus, GoalMode } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -38,6 +39,7 @@ export function Dashboard() {
   const [aiLoading,    setAiLoading]    = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const [showAuth,     setShowAuth]     = useState(false)
+  const [showSkills,   setShowSkills]   = useState(false)
 
   const [playerOverride, setPlayerOverride] = useState(() => localStorage.getItem('rag-player') ?? '')
   const player = displayName || playerOverride
@@ -51,9 +53,6 @@ export function Dashboard() {
 
   const filtered = useMemo(() => {
     if (statusFilter === 'mvp-alive') {
-      // Aba MVP: mostra apenas os que ainda não foram mortos (sem kill registrada)
-      // e os que já estão com janela aberta (podem ser caçados agora)
-      // Oculta 'far' e 'soon' = já mortos com timer ativo
       return enriched.filter(e => e.status !== 'far' && e.status !== 'soon')
     }
     return enriched.filter(e => e.status === statusFilter)
@@ -142,6 +141,14 @@ export function Dashboard() {
           <span className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border border-rag-blue/40 bg-blue-900/20 text-rag-blue">
             <Shield size={11} /> Cloud-ready
           </span>
+
+          {/* Botão Skills */}
+          <button
+            onClick={() => setShowSkills(true)}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-rag-accent/40 bg-rag-accent/10 text-rag-accent hover:bg-rag-accent/20 transition-colors font-semibold"
+          >
+            <Zap size={11} /> Skills
+          </button>
 
           {authLoading ? null : user ? (
             <div className="flex items-center gap-2">
@@ -296,7 +303,8 @@ export function Dashboard() {
         />
       )}
 
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth   && <AuthModal         onClose={() => setShowAuth(false)}   />}
+      {showSkills && <SkillChangesPanel onClose={() => setShowSkills(false)} />}
     </div>
   )
 }
