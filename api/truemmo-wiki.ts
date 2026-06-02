@@ -1,10 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import * as cheerio from 'cheerio'
 
-// Endpoint: GET /api/truemmo-wiki?page=Pontos_de_MvP
-// Faz proxy da MediaWiki API do TrueMmo para evitar CORS no frontend.
-// Parseia a resposta e extrai a lista de MVPs com mapa, respawn e pontos.
+// GET /api/truemmo-wiki
+// Faz scraping do HTML da pagina Pontos_de_MvP e retorna JSON com os MVPs.
+// Cache de 10 min no Vercel Edge para nao marttelar a wiki.
 
-const WIKI_API = 'https://wiki.truemmo.com.br/api.php'
+const WIKI_URL = 'https://wiki.truemmo.com.br/index.php/Pontos_de_MvP'
 
 interface WikiMvpRow {
   name: string
@@ -14,105 +15,79 @@ interface WikiMvpRow {
   mvpPoints: number
 }
 
-function parseMinutes(raw: string): number {
-  const n = parseInt(raw.replace(/[^0-9]/g, ''), 10)
-  return isNaN(n) ? 0 : n
-}
-
-/**
- * Extrai linhas de uma wikitable MediaWiki no formato:
- * |- \n | Nome || Mapa || Respawn || Pontos
- * Funciona para as tabelas da pagina Pontos_de_MvP.
- */
-function parseWikiTable(wikitext: string): WikiMvpRow[] {
-  const rows: WikiMvpRow[] = []
-
-  // Divide em linhas de tabela
-  const lines = wikitext.split('|-')
-
-  for (const block of lines) {
-    // Pega celulas separadas por || ou por linhas com |
-    const cells = block
-      .split('\n')
-      .map(l => l.replace(/^\|\|?/, '').trim())
-      .filter(Boolean)
-      .flatMap(l => l.split('||').map(c => c.trim()))
-
-    // Remove markup wiki: [[link|texto]] => texto, '''bold''' => texto
-    const clean = (s: string) =>
-      s
-        .replace(/\[\[[^\]]*\|([^\]]+)\]\]/g, '$1')
-        .replace(/\[\[([^\]]+)\]\]/g, '$1')
-        .replace(/'{2,3}/g, '')
-        .replace(/<[^>]+>/g, '')
-        .trim()
-
-    // Esperamos ao menos 4 campos: nome, mapa, respawn (min-max), pontos
-    const cleaned = cells.map(clean).filter(Boolean)
-    if (cleaned.length < 4) continue
-
-    const [nameRaw, mapRaw, respawnRaw, pointsRaw] = cleaned
-
-    // Ignora linhas de cabecalho
-    if (!nameRaw || nameRaw.startsWith('!') || nameRaw.toLowerCase() === 'nome') continue
-
-    // Respawn pode ser "120" ou "120-130" ou "120 ~ 130"
-    const respawnMatch = respawnRaw.match(/(\d+)\D*(\d*)/)
-    const minRespawn = respawnMatch ? parseMinutes(respawnMatch[1]) : 0
-    const maxRespawn = respawnMatch?.[2] ? parseMinutes(respawnMatch[2]) : minRespawn
-
-    rows.push({
-      name:        nameRaw,
-      map:         mapRaw.toLowerCase().replace(/\s+/g, '_'),
-      minRespawn,
-      maxRespawn,
-      mvpPoints:   parseMinutes(pointsRaw),
-    })
-  }
-
-  return rows
+function parseRespawn(raw: string): { min: number; max: number } {
+  const nums = raw.match(/\d+/g)?.map(Number) ?? []
+  if (nums.length === 0) return { min: 0, max: 0 }
+  if (nums.length === 1) return { min: nums[0], max: nums[0] }
+  return { min: nums[0], max: nums[1] }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=300') // cache 10 min
-
-  const page = (req.query.page as string) || 'Pontos_de_MvP'
+  res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=300')
 
   try {
-    const url = new URL(WIKI_API)
-    url.searchParams.set('action',      'query')
-    url.searchParams.set('prop',        'revisions')
-    url.searchParams.set('titles',      page)
-    url.searchParams.set('rvprop',      'content')
-    url.searchParams.set('rvslots',     'main')
-    url.searchParams.set('format',      'json')
-    url.searchParams.set('formatversion', '2')
-
-    const response = await fetch(url.toString(), {
-      headers: { 'User-Agent': 'TrueMmo-MVP-Timer/1.0' },
-      signal:  AbortSignal.timeout(8000),
+    const response = await fetch(WIKI_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'pt-BR,pt;q=0.9',
+      },
+      signal: AbortSignal.timeout(10000),
     })
 
     if (!response.ok) {
       return res.status(502).json({ error: `Wiki respondeu ${response.status}` })
     }
 
-    const data = await response.json()
-    const pages = data?.query?.pages
-    if (!pages?.length) {
-      return res.status(404).json({ error: 'Pagina nao encontrada na wiki' })
-    }
+    const html = await response.text()
+    const $ = cheerio.load(html)
+    const mvps: WikiMvpRow[] = []
 
-    const wikitext: string = pages[0]?.revisions?.[0]?.slots?.main?.content ?? ''
-    if (!wikitext) {
-      return res.status(404).json({ error: 'Wikitext vazio' })
-    }
+    // A pagina tem uma ou mais wikitables — percorre todas
+    $('table.wikitable').each((_, table) => {
+      const headers: string[] = []
 
-    const mvps = parseWikiTable(wikitext)
+      // Detecta colunas pelo thead ou primeira linha
+      $(table).find('tr').first().find('th').each((_, th) => {
+        headers.push($(th).text().trim().toLowerCase())
+      })
+
+      // Indice de cada coluna relevante (flexivel a mudancas de layout)
+      const iName     = headers.findIndex(h => h.includes('nome') || h.includes('mvp'))
+      const iMap      = headers.findIndex(h => h.includes('mapa') || h.includes('map'))
+      const iRespawn  = headers.findIndex(h => h.includes('respawn') || h.includes('tempo'))
+      const iPoints   = headers.findIndex(h => h.includes('ponto') || h.includes('point'))
+
+      // Pula tabela se nao tiver as colunas esperadas
+      if (iName < 0 || iPoints < 0) return
+
+      $(table).find('tr').slice(1).each((_, tr) => {
+        const cells = $(tr).find('td').toArray().map(td => $(td).text().trim())
+        if (cells.length < 2) return
+
+        const name     = cells[iName]     ?? ''
+        const mapRaw   = iMap >= 0 ? (cells[iMap] ?? '') : ''
+        const respRaw  = iRespawn >= 0 ? (cells[iRespawn] ?? '') : ''
+        const pointRaw = cells[iPoints]   ?? ''
+
+        const points = parseInt(pointRaw.replace(/[^0-9]/g, ''), 10)
+        if (!name || isNaN(points)) return
+
+        const { min, max } = parseRespawn(respRaw)
+
+        mvps.push({
+          name,
+          map:         mapRaw.toLowerCase().replace(/\s+/g, '_') || 'unknown',
+          minRespawn:  min,
+          maxRespawn:  max,
+          mvpPoints:   points,
+        })
+      })
+    })
 
     return res.status(200).json({
-      page,
+      url:      WIKI_URL,
       count:    mvps.length,
       mvps,
       _fetched: new Date().toISOString(),
