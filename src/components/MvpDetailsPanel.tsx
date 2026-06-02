@@ -1,12 +1,5 @@
-import { useEffect } from 'react'
-import { Loader2, X } from 'lucide-react'
-import { useMvpDetails } from '@/hooks/useMvpDetails'
-import {
-  formatDropChance,
-  getElementName,
-  getRaceName,
-  getSizeName,
-} from '@/lib/divinePride'
+import { X } from 'lucide-react'
+import { MVP_RESISTANCES } from '@/data/mvpResistances'
 import type { EnrichedMVP } from '@/types'
 
 interface Props {
@@ -14,20 +7,41 @@ interface Props {
   onClose: () => void
 }
 
-export function MvpDetailsPanel({ item, onClose }: Props) {
-  const { state, load } = useMvpDetails()
+const ELEMENT_COLORS: Record<string, string> = {
+  'Sagrado':    'text-yellow-300 bg-yellow-900/20 border-yellow-700/40',
+  'Sombra':     'text-purple-400 bg-purple-900/20 border-purple-700/40',
+  'Fogo':       'text-red-400    bg-red-900/20    border-red-700/40',
+  'Água':       'text-blue-400   bg-blue-900/20   border-blue-700/40',
+  'Vento':      'text-green-300  bg-green-900/20  border-green-700/40',
+  'Terra':      'text-amber-400  bg-amber-900/20  border-amber-700/40',
+  'Neutro':     'text-gray-300   bg-gray-800/40   border-gray-600/40',
+  'Veneno':     'text-lime-400   bg-lime-900/20   border-lime-700/40',
+  'Morto-vivo': 'text-rose-400   bg-rose-900/20   border-rose-700/40',
+  'Fantasma':   'text-indigo-300 bg-indigo-900/20 border-indigo-700/40',
+  'Elétrico':   'text-cyan-300   bg-cyan-900/20   border-cyan-700/40',
+}
 
-  useEffect(() => { load(item.mobId) }, [item.mobId, load])
+function ElementBadge({ name }: { name: string }) {
+  const cls = ELEMENT_COLORS[name] ?? 'text-rag-muted bg-rag-bg border-rag-border'
+  return (
+    <span className={`text-xs px-2 py-0.5 rounded-full border font-semibold ${cls}`}>
+      {name}
+    </span>
+  )
+}
+
+export function MvpDetailsPanel({ item, onClose }: Props) {
+  const res = MVP_RESISTANCES[item.mobId]
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-rag-surface border border-rag-border rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto flex flex-col shadow-2xl">
+      <div className="bg-rag-surface border border-rag-border rounded-2xl w-full max-w-md flex flex-col shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-rag-border sticky top-0 bg-rag-surface z-10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-rag-border">
           <div>
             <h2 className="font-body font-bold text-rag-text text-base">{item.name}</h2>
-            <p className="text-rag-muted text-xs">Divine Pride · Mob ID {item.mobId}</p>
+            <p className="text-rag-muted text-xs">Mob ID {item.mobId} · {item.map}</p>
           </div>
           <button
             onClick={onClose}
@@ -38,111 +52,63 @@ export function MvpDetailsPanel({ item, onClose }: Props) {
           </button>
         </div>
 
-        <div className="p-5 flex flex-col gap-5">
+        <div className="p-5 flex flex-col gap-4">
+          {!res ? (
+            <p className="text-rag-muted text-sm text-center py-4">
+              Dados de resistência não cadastrados para este MVP.
+            </p>
+          ) : (
+            <>
+              {/* Elemento do MVP */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-rag-bg border border-rag-border rounded-lg p-3 text-center">
+                  <span className="block text-rag-muted text-xs mb-1">Raça</span>
+                  <strong className="text-rag-text text-sm">{res.race}</strong>
+                </div>
+                <div className="bg-rag-bg border border-rag-border rounded-lg p-3 text-center">
+                  <span className="block text-rag-muted text-xs mb-1">Tamanho</span>
+                  <strong className="text-rag-text text-sm">{res.size}</strong>
+                </div>
+                <div className="bg-rag-bg border border-rag-border rounded-lg p-3 text-center">
+                  <span className="block text-rag-muted text-xs mb-1">Elemento</span>
+                  <ElementBadge name={res.element} />
+                </div>
+              </div>
 
-          {/* Loading */}
-          {state.status === 'loading' && (
-            <div className="flex items-center justify-center gap-2 py-10 text-rag-muted">
-              <Loader2 size={18} className="animate-spin" />
-              <span className="text-sm">Buscando dados...</span>
-            </div>
+              {/* Fraquezas */}
+              <div className="bg-rag-bg border border-green-700/30 rounded-lg p-3">
+                <p className="text-xs font-semibold text-green-400 mb-2">★ Mais dano com</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {res.weakTo.map(e => <ElementBadge key={e} name={e} />)}
+                </div>
+              </div>
+
+              {/* Resistências */}
+              <div className="bg-rag-bg border border-red-700/30 rounded-lg p-3">
+                <p className="text-xs font-semibold text-red-400 mb-2">✕ Resiste a</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {res.resistTo.map(e => <ElementBadge key={e} name={e} />)}
+                </div>
+              </div>
+
+              {/* Dica */}
+              {res.tips && (
+                <div className="bg-rag-accent/10 border border-rag-accent/30 rounded-lg px-3 py-2">
+                  <p className="text-rag-accent text-xs">💡 {res.tips}</p>
+                </div>
+              )}
+
+              {/* Link externo */}
+              <a
+                href={`https://www.divine-pride.net/database/monster/${item.mobId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-rag-muted hover:text-rag-text underline underline-offset-2 transition-colors text-center"
+              >
+                Ver completo no Divine Pride ↗
+              </a>
+            </>
           )}
-
-          {/* Erro */}
-          {state.status === 'error' && (
-            <div className="bg-red-900/20 border border-red-700/30 rounded-lg p-4 text-red-400 text-sm">
-              {state.msg}
-              <p className="text-xs mt-1 text-rag-muted">Verifique se VITE_DIVINE_PRIDE_KEY está configurada no .env</p>
-            </div>
-          )}
-
-          {state.status === 'ok' && (() => {
-            const d = state.data
-            const allDrops = [...(d.mvpDrops ?? []), ...(d.drops ?? [])]
-              .filter(drop => drop.item)
-              .sort((a, b) => b.chance - a.chance)
-
-            return (
-              <>
-                {/* Stats principais */}
-                <section>
-                  <h3 className="text-xs uppercase tracking-wider text-rag-muted mb-2">Informações</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { label: 'Level',    value: d.level },
-                      { label: 'HP',       value: d.health?.toLocaleString('pt-BR') },
-                      { label: 'Elemento', value: getElementName(d.element) },
-                      { label: 'Raça',     value: getRaceName(d.race) },
-                      { label: 'Tamanho',  value: getSizeName(d.size) },
-                      { label: 'EXP MVP', value: d.mvpExp?.toLocaleString('pt-BR') },
-                    ].map(s => (
-                      <div key={s.label} className="bg-rag-bg border border-rag-border rounded-lg p-2">
-                        <span className="block text-rag-muted text-xs mb-0.5">{s.label}</span>
-                        <strong className="text-rag-text text-sm">{s.value ?? '—'}</strong>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                {/* Drops */}
-                <section>
-                  <h3 className="text-xs uppercase tracking-wider text-rag-muted mb-2">
-                    Drops
-                    <span className="ml-1.5 text-rag-faint normal-case">({allDrops.length} itens)</span>
-                  </h3>
-                  {allDrops.length === 0 ? (
-                    <p className="text-rag-muted text-sm">Nenhum drop encontrado.</p>
-                  ) : (
-                    <ul className="flex flex-col gap-1.5">
-                      {allDrops.map((drop, i) => {
-                        const isMvpDrop = (d.mvpDrops ?? []).some(mv => mv.itemId === drop.itemId)
-                        return (
-                          <li key={`${drop.itemId}-${i}`}
-                            className="flex items-center gap-3 bg-rag-bg border border-rag-border rounded-lg px-3 py-2">
-                            {drop.item.imageUrl ? (
-                              <img
-                                src={drop.item.imageUrl}
-                                alt={drop.item.name}
-                                width={24} height={24}
-                                className="shrink-0"
-                                style={{ imageRendering: 'pixelated' }}
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-6 h-6 shrink-0 rounded bg-rag-surface2 border border-rag-border" />
-                            )}
-                            <span className="flex-1 text-sm text-rag-text truncate">
-                              {drop.item.name}
-                              {isMvpDrop && (
-                                <span className="ml-1.5 text-xs text-yellow-400 font-bold">MVP</span>
-                              )}
-                            </span>
-                            <span className={`text-xs font-mono tabular-nums shrink-0 ${
-                              drop.chance >= 5000 ? 'text-green-400'
-                              : drop.chance >= 500  ? 'text-yellow-400'
-                              : 'text-rag-muted'
-                            }`}>
-                              {formatDropChance(drop.chance)}
-                            </span>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
-                </section>
-
-                {/* Link externo */}
-                <a
-                  href={`https://www.divine-pride.net/database/monster/${item.mobId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-rag-muted hover:text-rag-text underline underline-offset-2 transition-colors"
-                >
-                  Ver completo no Divine Pride ↗
-                </a>
-              </>
-            )
-          })()}
         </div>
       </div>
     </div>
