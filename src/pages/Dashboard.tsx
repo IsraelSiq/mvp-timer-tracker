@@ -235,11 +235,6 @@ export function Dashboard() {
             <AISuggestion suggestion={aiSuggestion} loading={aiLoading} onAsk={handleAsk} />
             <hr className="border-rag-border" />
             <KillLogPanel kills={kills} groupName={groupName} />
-            <hr className="border-rag-border" />
-            <section className="text-xs text-rag-muted flex flex-col gap-1">
-              <p>⚠️ App pensado para rodar em cloud (Vercel/Netlify) para evitar conflito com Gepard.</p>
-              <p>Configure <code className="text-rag-text bg-rag-bg px-1 rounded">VITE_SUPABASE_URL</code>, <code className="text-rag-text bg-rag-bg px-1 rounded">VITE_SUPABASE_ANON_KEY</code> e <code className="text-rag-text bg-rag-bg px-1 rounded">VITE_GEMINI_API_KEY</code>.</p>
-            </section>
           </aside>
         </div>
       </div>
