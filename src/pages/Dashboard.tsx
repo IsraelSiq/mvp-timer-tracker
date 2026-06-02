@@ -16,10 +16,10 @@ import { AuthModal } from '@/components/AuthModal'
 import type { EnrichedMVP, KillLog, KillStatus, GoalMode } from '@/types'
 import toast from 'react-hot-toast'
 
-type StatusFilter = 'all' | KillStatus
+type StatusFilter = 'mvp-alive' | KillStatus
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
-  { value: 'all',         label: 'Todos' },
+  { value: 'mvp-alive',   label: 'MVP' },
   { value: 'window-open', label: '🟢 Janela Aberta' },
   { value: 'soon',        label: '🔵 Em Breve' },
   { value: 'far',         label: '🔴 Longe' },
@@ -31,7 +31,7 @@ export function Dashboard() {
   const [groupName,    setGroupName]    = useState(() => localStorage.getItem('rag-group') ?? 'truemmo-main')
   const { kills, synced, addKill, clearLocal } = useKills(groupName)
   const [query,        setQuery]        = useState('')
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('mvp-alive')
   const [goalMode,     setGoalMode]     = useState<GoalMode>('default')
   const [selected,     setSelected]     = useState<EnrichedMVP | null>(null)
   const [aiSuggestion, setAiSuggestion] = useState('')
@@ -49,11 +49,15 @@ export function Dashboard() {
       .sort((a, b) => goalScore(b, goalMode) - goalScore(a, goalMode) || b.priority - a.priority)
   }, [kills, now, query, goalMode])
 
-  const filtered = useMemo(() =>
-    statusFilter === 'all'
-      ? enriched
-      : enriched.filter(e => e.status === statusFilter)
-  , [enriched, statusFilter])
+  const filtered = useMemo(() => {
+    if (statusFilter === 'mvp-alive') {
+      // Aba MVP: mostra apenas os que ainda não foram mortos (sem kill registrada)
+      // e os que já estão com janela aberta (podem ser caçados agora)
+      // Oculta 'far' e 'soon' = já mortos com timer ativo
+      return enriched.filter(e => e.status !== 'far' && e.status !== 'soon')
+    }
+    return enriched.filter(e => e.status === statusFilter)
+  }, [enriched, statusFilter])
 
   const openCount = enriched.filter(e => e.status === 'window-open').length
   const soonCount = enriched.filter(e => e.status === 'soon').length
@@ -246,7 +250,7 @@ export function Dashboard() {
               }`}
             >
               {tab.label}
-              {tab.value !== 'all' && (
+              {tab.value !== 'mvp-alive' && (
                 <span className="ml-1.5 text-rag-muted/70">
                   ({enriched.filter(e => e.status === tab.value).length})
                 </span>

@@ -73,10 +73,7 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
           <div className="absolute top-2 right-2">
             <StatusBadge status={item.status} />
           </div>
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
-            <span className="text-xs px-1.5 py-0.5 rounded bg-rag-surface/80 border border-rag-border text-rag-muted">
-              P{item.priority}
-            </span>
+          <div className="absolute top-2 left-2">
             <span className={`text-xs px-1.5 py-0.5 rounded border ${diff.className}`}>
               {diff.label}
             </span>
