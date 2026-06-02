@@ -1,10 +1,11 @@
-import { X } from 'lucide-react'
+import { X, Swords } from 'lucide-react'
 import { MVP_RESISTANCES } from '@/data/mvpResistances'
 import type { EnrichedMVP } from '@/types'
 
 interface Props {
   item: EnrichedMVP
   onClose: () => void
+  onRegisterKill?: (id: number) => void
 }
 
 const ELEMENT_COLORS: Record<string, string> = {
@@ -21,6 +22,21 @@ const ELEMENT_COLORS: Record<string, string> = {
   'Elétrico':   'text-cyan-300   bg-cyan-900/20   border-cyan-700/40',
 }
 
+const WEAPON_BY_SIZE: Record<string, string> = {
+  'Grande': 'Lança / Manopla (120%)',
+  'Médio':  'Espada / Arco (100%)',
+  'Pequeno':'Adaga / Arco (100%)',
+}
+
+const DIFFICULTY_STYLE: Record<string, string> = {
+  easy:   'text-green-400 bg-green-900/20 border-green-700/40',
+  medium: 'text-yellow-400 bg-yellow-900/20 border-yellow-700/40',
+  hard:   'text-red-400 bg-red-900/20 border-red-700/40',
+}
+const DIFFICULTY_LABEL: Record<string, string> = {
+  easy: 'Fácil', medium: 'Médio', hard: 'Difícil',
+}
+
 function ElementBadge({ name }: { name: string }) {
   const cls = ELEMENT_COLORS[name] ?? 'text-rag-muted bg-rag-bg border-rag-border'
   return (
@@ -30,18 +46,48 @@ function ElementBadge({ name }: { name: string }) {
   )
 }
 
-export function MvpDetailsPanel({ item, onClose }: Props) {
+function useCountdown(item: EnrichedMVP) {
+  // Retorna string do próximo spawn ou null se não há kill registrada
+  const killed = (item as any).lastKill as number | undefined
+  if (!killed) return null
+  const now = Date.now()
+  const mid = killed + ((item.minRespawn + item.maxRespawn) / 2) * 60 * 1000
+  const diff = mid - now
+  if (diff <= 0) return 'Disponível agora!'
+  const h = Math.floor(diff / 3600000)
+  const m = Math.floor((diff % 3600000) / 60000)
+  const s = Math.floor((diff % 60000) / 1000)
+  return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`
+}
+
+export function MvpDetailsPanel({ item, onClose, onRegisterKill }: Props) {
   const res = MVP_RESISTANCES[item.mobId]
+  const countdown = useCountdown(item)
+  const diff = (item as any).difficulty as string | undefined
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-rag-surface border border-rag-border rounded-2xl w-full max-w-md flex flex-col shadow-2xl">
-
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      style={{ animation: 'fadeIn 180ms ease' }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-rag-surface border border-rag-border rounded-2xl w-full max-w-md flex flex-col shadow-2xl"
+        style={{ animation: 'slideUp 220ms cubic-bezier(0.16,1,0.3,1)' }}
+        onClick={e => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-rag-border">
           <div>
-            <h2 className="font-body font-bold text-rag-text text-base">{item.name}</h2>
-            <p className="text-rag-muted text-xs">Mob ID {item.mobId} · {item.map}</p>
+            <div className="flex items-center gap-2">
+              <h2 className="font-body font-bold text-rag-text text-base">{item.name}</h2>
+              {diff && (
+                <span className={`text-xs px-2 py-0.5 rounded-full border font-semibold ${DIFFICULTY_STYLE[diff] ?? ''}`}>
+                  {DIFFICULTY_LABEL[diff] ?? diff}
+                </span>
+              )}
+            </div>
+            <p className="text-rag-muted text-xs mt-0.5">Mob ID {item.mobId} · {item.map}</p>
           </div>
           <button
             onClick={onClose}
@@ -53,13 +99,21 @@ export function MvpDetailsPanel({ item, onClose }: Props) {
         </div>
 
         <div className="p-5 flex flex-col gap-4">
+          {/* Timer do próximo spawn */}
+          {countdown && (
+            <div className="bg-rag-bg border border-rag-accent/30 rounded-lg px-4 py-2.5 flex items-center justify-between">
+              <span className="text-xs text-rag-muted">⏱ Próximo spawn</span>
+              <span className="text-rag-accent font-bold text-sm">{countdown}</span>
+            </div>
+          )}
+
           {!res ? (
             <p className="text-rag-muted text-sm text-center py-4">
               Dados de resistência não cadastrados para este MVP.
             </p>
           ) : (
             <>
-              {/* Elemento do MVP */}
+              {/* Info cards */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-rag-bg border border-rag-border rounded-lg p-3 text-center">
                   <span className="block text-rag-muted text-xs mb-1">Raça</span>
@@ -74,6 +128,15 @@ export function MvpDetailsPanel({ item, onClose }: Props) {
                   <ElementBadge name={res.element} />
                 </div>
               </div>
+
+              {/* Arma recomendada */}
+              {WEAPON_BY_SIZE[res.size] && (
+                <div className="bg-rag-bg border border-rag-border rounded-lg px-3 py-2 flex items-center gap-2">
+                  <Swords size={14} className="text-rag-muted shrink-0" />
+                  <span className="text-xs text-rag-muted">Arma ideal:</span>
+                  <span className="text-xs text-rag-text font-semibold">{WEAPON_BY_SIZE[res.size]}</span>
+                </div>
+              )}
 
               {/* Fraquezas */}
               <div className="bg-rag-bg border border-green-700/30 rounded-lg p-3">
@@ -97,20 +160,36 @@ export function MvpDetailsPanel({ item, onClose }: Props) {
                   <p className="text-rag-accent text-xs">💡 {res.tips}</p>
                 </div>
               )}
-
-              {/* Link externo */}
-              <a
-                href={`https://www.divine-pride.net/database/monster/${item.mobId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-rag-muted hover:text-rag-text underline underline-offset-2 transition-colors text-center"
-              >
-                Ver completo no Divine Pride ↗
-              </a>
             </>
           )}
+
+          {/* Ações */}
+          <div className="flex gap-2 pt-1">
+            {onRegisterKill && (
+              <button
+                onClick={() => { onRegisterKill(item.id); onClose() }}
+                className="flex-1 flex items-center justify-center gap-2 bg-rag-accent hover:bg-rag-accent/80 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
+              >
+                <Swords size={15} />
+                Registrar Kill
+              </button>
+            )}
+            <a
+              href={`https://www.divine-pride.net/database/monster/${item.mobId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center text-xs text-rag-muted hover:text-rag-text border border-rag-border hover:border-rag-text/30 rounded-xl py-2.5 transition-colors"
+            >
+              Divine Pride ↗
+            </a>
+          </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(24px) scale(0.97) } to { opacity: 1; transform: translateY(0) scale(1) } }
+      `}</style>
     </div>
   )
 }
