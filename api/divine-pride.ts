@@ -3,7 +3,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Só aceita GET
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -13,9 +12,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'mobId é obrigatório' })
   }
 
-  const apiKey = process.env.VITE_DIVINE_PRIDE_KEY
+  // Tenta as duas variações: com e sem prefixo VITE_
+  const apiKey = process.env.DIVINE_PRIDE_KEY ?? process.env.VITE_DIVINE_PRIDE_KEY
   if (!apiKey) {
-    return res.status(500).json({ error: 'VITE_DIVINE_PRIDE_KEY não configurada no servidor' })
+    return res.status(500).json({ error: 'DIVINE_PRIDE_KEY não configurada no servidor' })
   }
 
   try {
@@ -30,7 +30,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await upstream.json()
 
-    // Cache por 10 minutos (dados estáticos de mob não mudam)
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate')
     res.setHeader('Access-Control-Allow-Origin', '*')
     return res.status(200).json(data)
