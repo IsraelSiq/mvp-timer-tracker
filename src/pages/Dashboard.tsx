@@ -19,12 +19,11 @@ import toast from 'react-hot-toast'
 type StatusFilter = 'all' | KillStatus
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
-  { value: 'all',           label: 'Todos' },
-  { value: 'alive',         label: '🟢 Vivo' },
-  { value: 'window-open',   label: '🟡 Janela aberta' },
-  { value: 'soon',          label: '⏳ Em breve' },
-  { value: 'far',           label: 'Longe' },
-  { value: 'window-passed', label: 'Passou' },
+  { value: 'all',          label: 'Todos' },
+  { value: 'mvp',          label: '⚪ MVP' },
+  { value: 'window-open',  label: '🟢 Janela Aberta' },
+  { value: 'soon',         label: '🔵 Em Breve' },
+  { value: 'far',          label: '🔴 Longe' },
 ]
 
 export function Dashboard() {
@@ -41,7 +40,6 @@ export function Dashboard() {
   const [confirmClear, setConfirmClear] = useState(false)
   const [showAuth,     setShowAuth]     = useState(false)
 
-  // Nick: displayName do Supabase ou input manual (fallback offline)
   const [playerOverride, setPlayerOverride] = useState(() => localStorage.getItem('rag-player') ?? '')
   const player = displayName || playerOverride
 
@@ -53,11 +51,9 @@ export function Dashboard() {
   }, [kills, now, query, goalMode])
 
   const filtered = useMemo(() =>
-    statusFilter === 'all' ? enriched : enriched.filter(e =>
-      statusFilter === 'alive'
-        ? e.status === 'alive' || e.status === 'no-record'
-        : e.status === statusFilter
-    )
+    statusFilter === 'all'
+      ? enriched
+      : enriched.filter(e => e.status === statusFilter)
   , [enriched, statusFilter])
 
   const openCount = enriched.filter(e => e.status === 'window-open').length
@@ -96,7 +92,6 @@ export function Dashboard() {
     toast.success('Registros locais apagados.')
   }
 
-  // Kill só permitida se logado
   function handleKillClick(item: EnrichedMVP) {
     if (!user) { setShowAuth(true); return }
     setSelected(item)
@@ -145,7 +140,6 @@ export function Dashboard() {
             <Shield size={11} /> Cloud-ready
           </span>
 
-          {/* Auth */}
           {authLoading ? null : user ? (
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border border-rag-border bg-rag-surface2 text-rag-muted">
@@ -172,10 +166,8 @@ export function Dashboard() {
 
       <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-6 flex flex-col gap-6">
 
-        {/* Objetivo */}
         <GoalSelector value={goalMode} onChange={setGoalMode} />
 
-        {/* Busca + Configs */}
         <div className="bg-rag-surface border border-rag-border rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-rag-muted" />
@@ -186,7 +178,6 @@ export function Dashboard() {
               className="w-full bg-rag-bg border border-rag-border rounded-lg pl-8 pr-3 py-2 text-rag-text text-sm outline-none focus:border-rag-accent"
             />
           </div>
-          {/* Nick só aparece se não estiver logado */}
           {!user && (
             <input
               id="player-nick"
@@ -219,7 +210,6 @@ export function Dashboard() {
           </button>
         </div>
 
-        {/* Banner se não estiver logado */}
         {!authLoading && !user && (
           <div
             onClick={() => setShowAuth(true)}
@@ -232,7 +222,6 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* KPIs */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { label: 'Janelas abertas',   value: openCount,              color: 'text-green-400'  },
@@ -246,7 +235,7 @@ export function Dashboard() {
           ))}
         </div>
 
-        {/* Filtros */}
+        {/* Filtros de status */}
         <div className="flex gap-2 flex-wrap">
           {STATUS_TABS.map(tab => (
             <button
@@ -261,18 +250,13 @@ export function Dashboard() {
               {tab.label}
               {tab.value !== 'all' && (
                 <span className="ml-1.5 text-rag-muted/70">
-                  ({enriched.filter(e =>
-                    tab.value === 'alive'
-                      ? e.status === 'alive' || e.status === 'no-record'
-                      : e.status === tab.value
-                  ).length})
+                  ({enriched.filter(e => e.status === tab.value).length})
                 </span>
               )}
             </button>
           ))}
         </div>
 
-        {/* Grid + sidebar */}
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.length === 0 ? (

@@ -43,22 +43,23 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
   const imgSrc = getMvpImage(item.name)
   const diff = DIFFICULTY_LABEL[item.difficulty]
 
-  const [showEnemyForm,   setShowEnemyForm]   = useState(false)
-  const [enemyTime,       setEnemyTime]       = useState(() => toLocalDatetimeInput(new Date()))
-  const [showDPDetails,   setShowDPDetails]   = useState(false)
+  const [showEnemyForm, setShowEnemyForm] = useState(false)
+  const [enemyTime,     setEnemyTime]     = useState(() => toLocalDatetimeInput(new Date()))
+  const [showDPDetails, setShowDPDetails] = useState(false)
 
   function submitEnemyKill() {
     onEnemyKill(item, new Date(enemyTime).toISOString())
     setShowEnemyForm(false)
   }
 
-  const isAlive = item.status === 'alive' || item.status === 'no-record'
+  // MVP sem registro — sem dados de respawn
+  const noRecord = item.status === 'mvp'
 
   return (
     <>
       <article className="bg-rag-surface border border-rag-border rounded-xl overflow-hidden flex flex-col hover:border-rag-accent/50 transition-colors">
 
-        {/* MVP image banner */}
+        {/* Banner imagem */}
         <div className="relative bg-rag-bg border-b border-rag-border flex items-center justify-center h-24 overflow-hidden">
           {imgSrc ? (
             <img
@@ -108,7 +109,8 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
             ))}
           </div>
 
-          {!isAlive && (
+          {/* Timers — só aparece se tiver registro */}
+          {!noRecord && (
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-rag-bg rounded-lg p-2 border border-rag-border">
                 <span className="block text-rag-muted text-xs uppercase tracking-wider mb-0.5">Janela mín.</span>
@@ -125,13 +127,14 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
             </div>
           )}
 
-          {isAlive && (
-            <p className="text-green-400 text-xs font-medium">
-              🟢 Vivo — nenhum registro de morte.
+          {noRecord && (
+            <p className="text-rag-muted text-xs">
+              ⚪ Nenhuma kill registrada — status desconhecido.
             </p>
           )}
 
-          {!isAlive && (
+          {/* Barra de progresso — só com registro */}
+          {!noRecord && (
             <div className="h-1.5 bg-rag-bg rounded-full overflow-hidden border border-rag-border">
               <div
                 className="h-full rounded-full transition-all duration-1000"
@@ -209,7 +212,6 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
         </div>
       </article>
 
-      {/* Modal Divine Pride */}
       {showDPDetails && (
         <MvpDetailsPanel
           item={item}
