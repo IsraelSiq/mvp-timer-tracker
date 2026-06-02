@@ -16,7 +16,6 @@ export function useKills(groupName: string) {
   const [kills, setKills] = useState<KillLog[]>(readLocal)
   const [synced, setSynced] = useState(false)
 
-  // Stable ref so merge never needs to be re-created
   const setKillsRef = useRef(setKills)
   setKillsRef.current = setKills
 
@@ -30,10 +29,9 @@ export function useKills(groupName: string) {
       writeLocal(sorted)
       return sorted
     })
-  }, []) // stable — no deps needed thanks to ref
+  }, [])
 
   useEffect(() => {
-    // Bug #1 fix: reset to local cache and mark as unsynced whenever group changes
     setKills(readLocal())
     setSynced(false)
 
@@ -43,27 +41,29 @@ export function useKills(groupName: string) {
     let channel: ReturnType<typeof supabase.channel>
 
     async function boot() {
+      // Busca TODOS os kills do grupo — sem filtro por usuário
       const { data, error } = await supabase!
         .from('mvp_kills')
         .select('*')
         .eq('group_name', groupName)
         .order('killed_at', { ascending: false })
-        .limit(200)
+        .limit(500)
 
-      // Bug #2 fix: ignore response if effect already cleaned up (race condition)
       if (!active) return
 
       if (!error && data) {
-        // Replace state with the remote data for this group (not merge, to avoid
-        // cross-group pollution from the previous localStorage read)
         const sorted = (data as KillLog[]).sort(
           (a, b) => new Date(b.killed_at).getTime() - new Date(a.killed_at).getTime()
         )
         setKills(sorted)
         writeLocal(sorted)
         setSynced(true)
+      } else if (error) {
+        // RLS pode estar bloqueando — loga o erro para diagnóstico
+        console.error('[useKills] Supabase error:', error.message, error.details, error.hint)
       }
 
+      // Realtime: escuta INSERTs de qualquer usuário do grupo
       channel = supabase!
         .channel('mvp-kills-' + groupName)
         .on('postgres_changes', {
@@ -89,12 +89,13 @@ export function useKills(groupName: string) {
     merge([entry])
     if (!supabase) return
     const { error } = await supabase.from('mvp_kills').insert({
-      mvp_id:     entry.mvp_id,
-      mvp_name:   entry.mvp_name,
-      killer:     entry.killer,
-      killed_at:  entry.killed_at,
-      note:       entry.note,
-      group_name: entry.group_name,
+      mvp_id:           entry.mvp_id,
+      mvp_name:         entry.mvp_name,
+      killer:           entry.killer,
+      killed_at:        entry.killed_at,
+      note:             entry.note,
+      group_name:       entry.group_name,
+      killed_by_enemy:  entry.killed_by_enemy ?? false,
     })
     if (error) toast.error('Falha ao gravar no Supabase; salvo localmente.')
   }, [merge])
