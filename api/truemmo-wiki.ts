@@ -1,9 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import * as cheerio from 'cheerio'
-
-// GET /api/truemmo-wiki
-// Faz scraping do HTML da pagina Pontos_de_MvP e retorna JSON com os MVPs.
-// Cache de 10 min no Vercel Edge para nao marttelar a wiki.
 
 const WIKI_URL = 'https://wiki.truemmo.com.br/index.php/Pontos_de_MvP'
 
@@ -15,14 +10,79 @@ interface WikiMvpRow {
   mvpPoints: number
 }
 
+function stripTags(html: string): string {
+  return html.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#[0-9]+;/g, '').trim()
+}
+
 function parseRespawn(raw: string): { min: number; max: number } {
   const nums = raw.match(/\d+/g)?.map(Number) ?? []
   if (nums.length === 0) return { min: 0, max: 0 }
   if (nums.length === 1) return { min: nums[0], max: nums[0] }
-  return { min: nums[0], max: nums[1] }
+  return { min: Math.min(nums[0], nums[1]), max: Math.max(nums[0], nums[1]) }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+function parseTables(html: string): WikiMvpRow[] {
+  const mvps: WikiMvpRow[] = []
+
+  // Extrai cada <table ...>...</table>
+  const tableRe = /<table[^>]*>([\/\S\s]*?)<\/table>/gi
+  let tableMatch: RegExpExecArray | null
+
+  while ((tableMatch = tableRe.exec(html)) !== null) {
+    const tableHtml = tableMatch[0]
+
+    // Extrai todas as <tr>
+    const rows: string[][] = []
+    const rowRe = /<tr[^>]*>([\/\S\s]*?)<\/tr>/gi
+    let rowMatch: RegExpExecArray | null
+
+    while ((rowMatch = rowRe.exec(tableHtml)) !== null) {
+      const rowHtml = rowMatch[1]
+      const cells: string[] = []
+      const cellRe = /<t[dh][^>]*>([\/\S\s]*?)<\/t[dh]>/gi
+      let cellMatch: RegExpExecArray | null
+      while ((cellMatch = cellRe.exec(rowHtml)) !== null) {
+        cells.push(stripTags(cellMatch[1]).replace(/\s+/g, ' ').trim())
+      }
+      if (cells.length > 0) rows.push(cells)
+    }
+
+    if (rows.length < 2) continue
+
+    // Header row
+    const headers = rows[0].map(h => h.toLowerCase())
+    const iName    = headers.findIndex(h => h.includes('nome') || h.includes('mvp'))
+    const iMap     = headers.findIndex(h => h.includes('mapa') || h.includes('map'))
+    const iRespawn = headers.findIndex(h => h.includes('respawn') || h.includes('tempo'))
+    const iPoints  = headers.findIndex(h => h.includes('ponto') || h.includes('point'))
+
+    if (iName < 0 || iPoints < 0) continue
+
+    for (const cells of rows.slice(1)) {
+      const name     = cells[iName]    ?? ''
+      const mapRaw   = iMap >= 0     ? (cells[iMap]    ?? '') : ''
+      const respRaw  = iRespawn >= 0 ? (cells[iRespawn] ?? '') : ''
+      const pointRaw = cells[iPoints] ?? ''
+
+      const points = parseInt(pointRaw.replace(/[^0-9]/g, ''), 10)
+      if (!name || isNaN(points)) continue
+
+      const { min, max } = parseRespawn(respRaw)
+
+      mvps.push({
+        name,
+        map:        mapRaw.toLowerCase().replace(/\s+/g, '_') || 'unknown',
+        minRespawn: min,
+        maxRespawn: max,
+        mvpPoints:  points,
+      })
+    }
+  }
+
+  return mvps
+}
+
+export default async function handler(_req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=300')
 
@@ -41,50 +101,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const html = await response.text()
-    const $ = cheerio.load(html)
-    const mvps: WikiMvpRow[] = []
-
-    // A pagina tem uma ou mais wikitables — percorre todas
-    $('table.wikitable').each((_, table) => {
-      const headers: string[] = []
-
-      // Detecta colunas pelo thead ou primeira linha
-      $(table).find('tr').first().find('th').each((_, th) => {
-        headers.push($(th).text().trim().toLowerCase())
-      })
-
-      // Indice de cada coluna relevante (flexivel a mudancas de layout)
-      const iName     = headers.findIndex(h => h.includes('nome') || h.includes('mvp'))
-      const iMap      = headers.findIndex(h => h.includes('mapa') || h.includes('map'))
-      const iRespawn  = headers.findIndex(h => h.includes('respawn') || h.includes('tempo'))
-      const iPoints   = headers.findIndex(h => h.includes('ponto') || h.includes('point'))
-
-      // Pula tabela se nao tiver as colunas esperadas
-      if (iName < 0 || iPoints < 0) return
-
-      $(table).find('tr').slice(1).each((_, tr) => {
-        const cells = $(tr).find('td').toArray().map(td => $(td).text().trim())
-        if (cells.length < 2) return
-
-        const name     = cells[iName]     ?? ''
-        const mapRaw   = iMap >= 0 ? (cells[iMap] ?? '') : ''
-        const respRaw  = iRespawn >= 0 ? (cells[iRespawn] ?? '') : ''
-        const pointRaw = cells[iPoints]   ?? ''
-
-        const points = parseInt(pointRaw.replace(/[^0-9]/g, ''), 10)
-        if (!name || isNaN(points)) return
-
-        const { min, max } = parseRespawn(respRaw)
-
-        mvps.push({
-          name,
-          map:         mapRaw.toLowerCase().replace(/\s+/g, '_') || 'unknown',
-          minRespawn:  min,
-          maxRespawn:  max,
-          mvpPoints:   points,
-        })
-      })
-    })
+    const mvps = parseTables(html)
 
     return res.status(200).json({
       url:      WIKI_URL,
