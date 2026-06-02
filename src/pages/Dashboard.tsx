@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Shield, Radio, Search } from 'lucide-react'
 import { MVP_LIST } from '@/data/mvps'
 import { enrichMVP } from '@/utils/timer'
+import { goalScore } from '@/utils/goalSort'
 import { useKills } from '@/hooks/useKills'
 import { useNow } from '@/hooks/useNow'
 import { askGemini } from '@/lib/gemini'
@@ -9,7 +10,8 @@ import { MVPCard } from '@/components/MVPCard'
 import { KillModal } from '@/components/KillModal'
 import { AISuggestion } from '@/components/AISuggestion'
 import { KillLogPanel } from '@/components/KillLog'
-import type { EnrichedMVP, KillLog, KillStatus } from '@/types'
+import { GoalSelector } from '@/components/GoalSelector'
+import type { EnrichedMVP, KillLog, KillStatus, GoalMode } from '@/types'
 import toast from 'react-hot-toast'
 
 type StatusFilter = 'all' | KillStatus
@@ -30,6 +32,7 @@ export function Dashboard() {
   const { kills, synced, addKill, clearLocal } = useKills(groupName)
   const [query,        setQuery]        = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [goalMode,     setGoalMode]     = useState<GoalMode>('default')
   const [selected,     setSelected]     = useState<EnrichedMVP | null>(null)
   const [aiSuggestion, setAiSuggestion] = useState('')
   const [aiLoading,    setAiLoading]    = useState(false)
@@ -39,8 +42,8 @@ export function Dashboard() {
     return MVP_LIST
       .filter(m => `${m.name} ${m.map}`.toLowerCase().includes(query.toLowerCase()))
       .map(m => enrichMVP(m, kills, now))
-      .sort((a, b) => b.score - a.score || b.priority - a.priority)
-  }, [kills, now, query])
+      .sort((a, b) => goalScore(b, goalMode) - goalScore(a, goalMode) || b.priority - a.priority)
+  }, [kills, now, query, goalMode])
 
   const filtered = useMemo(() =>
     statusFilter === 'all' ? enriched : enriched.filter(e =>
@@ -127,6 +130,11 @@ export function Dashboard() {
       </header>
 
       <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-6 flex flex-col gap-6">
+
+        {/* Objetivo / Goal Mode */}
+        <GoalSelector value={goalMode} onChange={setGoalMode} />
+
+        {/* Busca + Configs */}
         <div className="bg-rag-surface border border-rag-border rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-rag-muted" />
@@ -163,6 +171,7 @@ export function Dashboard() {
           </button>
         </div>
 
+        {/* KPIs */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { label: 'Janelas abertas',   value: openCount,              color: 'text-green-400'  },
@@ -176,6 +185,7 @@ export function Dashboard() {
           ))}
         </div>
 
+        {/* Filtros de status */}
         <div className="flex gap-2 flex-wrap">
           {STATUS_TABS.map(tab => (
             <button
@@ -201,6 +211,7 @@ export function Dashboard() {
           ))}
         </div>
 
+        {/* Grid de cards + sidebar */}
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.length === 0 ? (

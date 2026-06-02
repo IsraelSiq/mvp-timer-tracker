@@ -13,6 +13,21 @@ interface Props {
   onEnemyKill: (item: EnrichedMVP, killedAt: string) => void
 }
 
+const DIFFICULTY_LABEL = {
+  easy:   { label: 'Fácil',  className: 'text-green-400  border-green-700/40  bg-green-900/20'  },
+  medium: { label: 'Médio',  className: 'text-yellow-400 border-yellow-700/40 bg-yellow-900/20' },
+  hard:   { label: 'Difícil',className: 'text-red-400    border-red-700/40    bg-red-900/20'    },
+}
+
+const TAG_LABEL: Record<string, string> = {
+  solo:      '👤 Solo',
+  group:     '👥 Grupo',
+  'high-drop': '💎 Drop',
+  fast:      '⚡ Rápido',
+  field:     '🌿 Field',
+  disputed:  '🔥 Disputado',
+}
+
 function toLocalDatetimeInput(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return (
@@ -25,6 +40,7 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
   const minRemaining = item.minRespawnDate ? item.minRespawnDate.getTime() - now : 0
   const maxRemaining = item.maxRespawnDate ? item.maxRespawnDate.getTime() - now : 0
   const imgSrc = getMvpImage(item.name)
+  const diff = DIFFICULTY_LABEL[item.difficulty]
 
   const [showEnemyForm, setShowEnemyForm] = useState(false)
   const [enemyTime,     setEnemyTime]     = useState(() => toLocalDatetimeInput(new Date()))
@@ -56,9 +72,12 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
         <div className="absolute top-2 right-2">
           <StatusBadge status={item.status} />
         </div>
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
           <span className="text-xs px-1.5 py-0.5 rounded bg-rag-surface/80 border border-rag-border text-rag-muted">
             P{item.priority}
+          </span>
+          <span className={`text-xs px-1.5 py-0.5 rounded border ${diff.className}`}>
+            {diff.label}
           </span>
         </div>
       </div>
@@ -75,6 +94,15 @@ export function MVPCard({ item, now, onKill, onEnemyKill }: Props) {
             {' • '}
             {item.minRespawn}–{item.maxRespawn} min
           </span>
+        </div>
+
+        {/* Tags */}
+        <div className="flex flex-wrap gap-1">
+          {item.tags.map(tag => (
+            <span key={tag} className="text-xs px-1.5 py-0.5 rounded-full border border-rag-border bg-rag-bg text-rag-muted">
+              {TAG_LABEL[tag] ?? tag}
+            </span>
+          ))}
         </div>
 
         {!isAlive && (
