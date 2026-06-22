@@ -9,7 +9,7 @@ export interface MVP {
   notes: string
   difficulty: 'easy' | 'medium' | 'hard'
   tags: MvpTag[]
-  mvpPoints?: number  // pontos concedidos ao matar no TrueMmo
+  mvpPoints?: number  // pontos de MVP concedidos ao matar
   image?: string      // URL da imagem do mob (divine-pride.net CDN ou custom)
 }
 
@@ -20,7 +20,7 @@ export type MvpTag =
   | 'fast'
   | 'field'
   | 'disputed'
-  | 'truemmo-exclusive'  // MVP exclusivo do servidor, nao existe no oficial
+  | 'server-exclusive'  // MVP exclusivo do servidor, nao existe no oficial
 
 /**
  * 4 estados possiveis:
