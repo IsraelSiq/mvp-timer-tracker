@@ -1,9 +1,8 @@
-# 🗡️ Ragnarok MVP Timer — TRUEMMO
+# 🗡️ Rag MVP Timer
 
-> Timer de respawn de MVP compartilhado em tempo real para o servidor **TRUEMMO**.  
+> Timer de respawn de MVP compartilhado em tempo real para servidores de Ragnarok Online.  
 > Roda 100% na nuvem (Vercel + Supabase) — sem instalar nada no PC de jogo.
 
-[![Deploy](https://img.shields.io/badge/deploy-Vercel-black?logo=vercel)](https://truemmo-mvp-timer.vercel.app)
 [![License](https://img.shields.io/badge/license-MIT-blue)](#)
 [![Version](https://img.shields.io/badge/version-2.0.0-green)](#)
 
@@ -100,8 +99,8 @@
 ## 🚀 Setup local
 
 ```bash
-git clone https://github.com/IsraelSiq/truemmo-mvp-timer.git
-cd truemmo-mvp-timer
+git clone https://github.com/IsraelSiq/mvp-timer-tracker.git
+cd mvp-timer-tracker
 npm install
 cp .env.example .env
 # Preencha as variáveis no .env
@@ -182,10 +181,7 @@ Vá em **Database → Replication** e ative a tabela `mvp_kills`.
    ```
    https://<seu-projeto>.supabase.co/auth/v1/callback
    ```
-5. Em **Authorized JavaScript origins**, adicione a URL da sua Vercel:
-   ```
-   https://truemmo-mvp-timer.vercel.app
-   ```
+5. Em **Authorized JavaScript origins**, adicione a URL do seu deploy na Vercel
 6. Copie o **Client ID** e o **Client Secret**
 
 ### Passo 2 — Supabase
