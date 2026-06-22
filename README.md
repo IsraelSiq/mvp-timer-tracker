@@ -4,7 +4,8 @@
 > Roda 100% na nuvem (Vercel + Supabase) — sem instalar nada no PC de jogo.
 
 [![License](https://img.shields.io/badge/license-MIT-blue)](#)
-[![Version](https://img.shields.io/badge/version-2.0.0-green)](#)
+[![Version](https://img.shields.io/badge/version-2.1.0-green)](#)
+[![MVPs](https://img.shields.io/badge/MVPs-99%2B-orange)](#-mvps-incluídos-99)
 
 > 🧪 Procurando o **Simulador de Skill Tree**? Ele foi movido para o repositório dedicado: [ro-skill-simulator](https://github.com/IsraelSiq/ro-skill-simulator)
 
@@ -26,7 +27,7 @@
 | 🤖 **IA (Gemini)** | Analisa todos os timers e sugere o melhor alvo do momento |
 | 🔍 **Busca e filtros** | Filtra por nome, mapa e status do MVP |
 | 📊 **KPIs** | Janelas abertas, abrindo em breve e melhor alvo no topo |
-| 🗺️ **38 MVPs** | Base completa do RO clássico com imagens, mapas e prioridades |
+| 🗺️ **99+ MVPs** | Base completa do RO Classic + Renewal com imagens, mapas e prioridades |
 
 ---
 
@@ -53,48 +54,129 @@
 
 ---
 
-## 📋 MVPs incluídos (38)
+## 📋 MVPs incluídos (99+)
 
-| MVP | Mapa | Respawn | Prioridade |
+> Lista baseada na wiki oficial do RO BR. MVPs com múltiplos mapas aparecem uma vez por mapa.  
+> `Especial` = sem tempo fixo de respawn (instância, evento ou mecânica própria).
+
+### Níveis 25–80
+
+| MVP | Nível | Mapa(s) | Respawn |
 |---|---|---|---|
-| Orc Hero | gef_fild14 | 60–70 min | 7 |
-| Moonlight Flower | pay_dun04 | 60–70 min | 8 |
-| Osiris | moc_pryd04 | 60–70 min | 7 |
-| Golden Thief Bug | prt_sewb4 | 60–70 min | 9 |
-| Stormy Knight | xmas_dun02 | 60–70 min | 6 |
-| Turtle General | tur_dun04 | 60–70 min | 8 |
-| Dark Lord | gl_chyard | 60–70 min | 8 |
-| Dracula | gef_dun02 | 60–70 min | 7 |
-| Pharaoh | in_sphinx5 | 60–70 min | 6 |
-| Amon Ra | moc_pryd06 | 60–70 min | 7 |
-| Evil Snake Lord | gon_dun03 | 95–105 min | 6 |
-| Incantation Samurai | ama_dun03 | 90–100 min | 6 |
-| White Lady | lou_dun03 | 117–127 min | 7 |
-| Ktullanux | ice_dun03 | 120 min | 7 |
-| Kiel-D-01 | kh_dun02 | 120–130 min | 9 |
-| Vesper | jupe_core | 120–130 min | 8 |
-| Baphomet | prt_maze03 | 120–130 min | 10 |
-| Eddga | pay_fild11 | 120–130 min | 8 |
-| Drake | treasure01 | 120–130 min | 8 |
-| Phreeoni | moc_fild17 | 120–130 min | 6 |
-| Mistress | mjolnir_04 | 120–130 min | 8 |
-| Doppelganger | gef_dun02 | 120–130 min | 7 |
-| Maya | anthell02 | 120–130 min | 7 |
-| Orc Lord | gef_fild10 | 120–130 min | 7 |
-| Fallen Bishop | abbey03 | 120–130 min | 9 |
-| Hatii | xmas_fild01 | 120–130 min | 6 |
-| Egnigem Cenia | lhz_dun02 | 120–130 min | 8 |
-| RSX-0806 | ein_dun02 | 125–135 min | 7 |
-| Thanatos Phantom | tha_t10 | 120 min | 9 |
-| Gloom Under Night | ra_san05 | 300–310 min | 9 |
-| Tao Gunka | beach_dun | 123–133 min | 10 |
-| Lord of Death | niflheim | 133–143 min | 9 |
-| Detardeurus | abyss_03 | 180–190 min | 8 |
-| Atroce | ra_fild02 | 240–250 min | 9 |
-| Lady Tanee | ayo_dun02 | 420–430 min | 8 |
-| Valkyrie Randgris | odin_tem03 | 480–490 min | 10 |
-| Ifrit | thor_v03 | 660–670 min | 10 |
-| Beelzebub | abbey03 | 720–730 min | 10 |
+| Gemaring | 25 | lasa_dun01 | 1 h |
+| Orc Herói | 50 | gef_fild03 | 1 h |
+| Maya | 55 | anthell02 / gld_dun03 / gld_dun02_2 | 2 h / 8 h / 8 h |
+| Senhor dos Orcs | 55 | gef_fild10 | 2 h |
+| Besouro-Ladrão Dourado | 65 | prt_sewb4 | 1 h |
+| Eddga | 65 | pay_fild10 / gld_dun01 / gld_dun01_2 | 2 h / 8 h / 8 h |
+| Osíris | 68 | moc_pryd04 | 1 h |
+| Amon Ra | 69 | moc_pryd06 | 1 h |
+| Freeoni | 71 | moc_fild17 | 2 h |
+| Drácula | 75 | gef_dun01 | 1 h |
+| Doppelganger | 77 | gef_dun02 / gld_dun02 / gld_dun04 | 2 h / 8 h / 8 h |
+| Abelha-Rainha | 78 | mjolnr_04 / gld_dun02 | 2 h / 8 h |
+| Flor do Luar | 79 | pay_dun04 / pay_dun01 | 1 h / 8 h |
+| Lady Tanee | 80 | ayo_dun02 | 7 h |
+
+### Níveis 81–120
+
+| MVP | Nível | Mapa(s) | Respawn |
+|---|---|---|---|
+| Bafomé | 81 | prt_maze03 / gld_dun03 | 2 h / 8 h |
+| Faraó | 85 | in_sphinx5 | 1 h |
+| Kublin | 85 | schg_dun01 / arug_dun01 | Especial |
+| Drake | 91 | treasure02 | 2 h |
+| Cavaleiro da Tempestade | 92 | xmas_dun02 | 1 h 7 min |
+| Boitatá | 93 | bra_dun02 | 2 h |
+| Leak | 94 | dew_dun01 | 2 h |
+| Senhor dos Mortos | 94 | Niflheim | 2 h 13 min |
+| Senhor das Trevas | 96 | gl_chyard / gl_chyard_ / gld_dun04 / gld_dun04_2 | 1 h / 1 h / 8 h / 8 h |
+| Gorynych | 97 | mosk_dun03 | 2 h |
+| Lady Branca | 97 | lou_dun03 | 1 h 56 min |
+| Hatii | 98 | xmas_fild01 | 2 h |
+| Ktullanux | 98 | ice_dun03 | 2 h |
+| Superaprendiz | 99 | teg_dun02 | 3 h |
+| Aprendiz | 99 | teg_dun01 | 3 h |
+| RSX-0806 | 100 | ein_dun02 | 2 h 5 min |
+| Samurai Encarnado | 100 | ama_dun03 | 1 h 31 min |
+| Serpente Suprema | 105 | gon_dun03 | 1 h 34 min |
+| Tao Gunka | 110 | beach_dun | 5 h |
+| General Tartaruga | 110 | tur_dun04 | 1 h |
+| Quimera Venenosa | 110 | slabw01 | 1 h |
+| Atroce | 113 | ra_fild03 / ra_fild04 / ve_fild01 / ve_fild02 / gld_dun03_2 | 3 h / 5 h / 3 h / 6 h / 8 h |
+| Ilusão do Luar | 118 | Ilusão da Lua | Especial |
+| Kraken | 124 | iz_dun05 | 2 h 20 min |
+
+### Níveis 125–160
+
+| MVP | Nível | Mapa(s) | Respawn |
+|---|---|---|---|
+| Kiel-D-01 | 125 | kh_dun02 | 2 h |
+| Vesper | 128 | jupe_core | 2 h |
+| Detardeurus | 135 | abyss_03 | 3 h |
+| Ktullanux de Cristal | 135 | Ilusão do Gelo | 22 h |
+| Bispo Decadente | 138 | abbey02 | 2 h |
+| Pesar Noturno | 139 | ra_san05 | 5 h |
+| Conde Drácula | 139 | Ilusão do Vampiro | Especial |
+| Rainha Scaraba | 140 | dic_dun02 | 2 h |
+| Rainha Scaraba Dourada | 140 | dic_dun03 | 2 h |
+| Espadachim Egnigem | 141 | lhz_dun02 | 2 h |
+| Valquíria Randgris | 141 | odin_tem03 | 8 h |
+| Pyuriel Furiosa | 141 | gld2_prt | 8 h |
+| General Daehyun | 142 | gld2_pay | 8 h |
+| Guardião Morto Kades | 143 | gld2_gef | 8 h |
+| Amon Ra do Pesadelo | 145 | moc_prydn2 | 1 h |
+| Gioia | 146 | gld2_ald | 8 h |
+| Ifrit | 146 | thor_v03 | 11 h |
+| Belzebu | 147 | abbey03 | 12 h |
+| Morroc Ferido | 151 | moc_fild22 | 12 h |
+| Bafomé Amaldiçoado | 154 | gl_cas02_ | 2 h |
+| Aranha Mecânica | 158 | rockmi1 | Instantâneo |
+| Algoz Eremes | 160 | lhz_dun03 | 2 h |
+| Sumo Margaretha | 160 | lhz_dun03 | 2 h |
+| Atiradora Cecil | 160 | lhz_dun03 | 2 h |
+| Arquimaga Kathryne | 160 | lhz_dun03 | 2 h |
+| Mestre-Ferreiro Howard | 160 | lhz_dun03 | 2 h |
+| Lorde Seyren | 160 | lhz_dun03 | 2 h |
+| Ursinho Brilhante | 160 | Ilusão do Ursinho | Especial |
+
+### Níveis 165–255
+
+| MVP | Nível | Mapa(s) | Respawn |
+|---|---|---|---|
+| Marechal Tartaruga | 165 | Ilusão da Tartaruga | Especial |
+| Árvore de Pitaya | 168 | ba_lost | 6 h |
+| Tao Gunka Ancestral | 169 | Ilusão de Luanda | Especial |
+| Defensor Wootan | 169 | Ilusão de Luanda | Especial |
+| Vigia do Tempo | 170 | c_tower3_ | 2 h |
+| R48-85-Bestia | 174 | sp_rudus2 | 1 h |
+| Maya Silente | 174 | Ilusão das Gêmeas | Especial |
+| Bafomé Caótico | 178 | Ilusão do Labirinto | Especial |
+| Bioquímico Flamel | 186 | Tumba da Honra | 2 h |
+| Trovador Alphoccio | 186 | Tumba da Honra | 2 h |
+| Musa Trentini | 186 | Tumba da Honra | 2 h |
+| Arcebispa Margaretha | 187 | Tumba da Honra | 2 h |
+| Mecânico Howard | 187 | Tumba da Honra | 2 h |
+| Arcana Kathryne | 187 | Tumba da Honra | 2 h |
+| Guardião Real Randel | 188 | Tumba da Honra | 2 h |
+| Feiticeira Celia | 188 | Tumba da Honra | 2 h |
+| Shura Chen | 188 | Tumba da Honra | 2 h |
+| Renegada Gertie | 188 | Tumba da Honra | 2 h |
+| Muspellskoll | 188 | mag_dun03 | 2 h |
+| Sicário Eremes | 189 | Tumba da Honra | 2 h |
+| Sentinela Cecil | 189 | Tumba da Honra | 2 h |
+| Cavaleiro Rúnico Seyren | 189 | Tumba da Honra | 2 h |
+| Lorde das Trevas | 194 | gl_cas01_ | 1 h |
+| Aranha Rainha | 195 | gl_cas01_ | 2 h |
+| Joialiant | 197 | ein_dun03 | 2 h |
+| Kraken Abismal | 204 | Ilusão do Mar | Especial |
+| Bruxa do Mar | 205 | Ilusão do Mar | Especial |
+| Valquíria Ingrid | 207 | odin_past | Especial |
+| Valquíria Reginleif | 207 | odin_past | Especial |
+| Detale Esqueleto | 209 | abyss_04 | 3 h |
+| R001-Bestia | 215 | sp_rudus4 | 3 h |
+| Quimera Única | 245 | amicitia2 | 3 h |
+| Bruxa da Morte | 255 | nif_dun02 | 3 h |
 
 ---
 
@@ -225,7 +307,7 @@ src/
 │   ├── AuthModal.tsx        # Modal de login (Google + e-mail/senha)
 │   └── GoalSelector.tsx     # Seletor de modo objetivo
 ├── data/
-│   ├── mvps.ts              # Lista de 38 MVPs com respawn, prioridade, dificuldade e tags
+│   ├── mvps.ts              # Lista de 99+ MVPs com respawn, prioridade, dificuldade e tags
 │   ├── mvpImages.ts         # URLs das imagens dos MVPs
 │   └── mapNames.ts          # Tradução dos IDs de mapa
 ├── hooks/
