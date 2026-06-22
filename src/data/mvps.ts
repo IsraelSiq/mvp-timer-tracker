@@ -1,12 +1,8 @@
 /**
- * Ponto de entrada mantido para compatibilidade com imports existentes.
+ * Re-export de compatibilidade.
+ * Todos os imports existentes de './mvps' continuam funcionando sem alteração.
  *
- * O dado real está em:
- *   src/data/mvps.vanilla.ts  — MVPs oficiais do RO
- *   src/data/mvps.truemmo.ts  — MVPs exclusivos TrueMmo
- *   src/data/mvps.index.ts    — barrel que combina tudo
- *
- * Para filtrar por servidor no código:
- *   import { MVP_VANILLA, MVP_TRUEMMO } from '@/data/mvps'
+ * Para acesso granular por categoria, importe de './mvps.index':
+ *   import { MVP_VANILLA, MVP_TRUEMMO } from '@/data/mvps.index'
  */
-export { MVP_LIST, MVP_VANILLA, MVP_TRUEMMO } from './mvps.index'
+export { MVP_LIST } from './mvps.index'

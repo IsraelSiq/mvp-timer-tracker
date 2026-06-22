@@ -1,17 +1,19 @@
 /**
- * Barrel de MVPs — combina todas as fontes em MVP_LIST.
+ * Barrel de dados de MVPs.
  *
- * Para filtrar por origem:
- *   import { MVP_VANILLA }  from './mvps.vanilla'
- *   import { MVP_TRUEMMO }  from './mvps.truemmo'
+ * Importar MVP_LIST a partir daqui ou de './mvps' (re-export de compatibilidade).
  *
- * Para usar tudo de uma vez (comportamento anterior mantido):
- *   import { MVP_LIST } from './mvps'
+ * Sub-arrays disponíveis para uso em filtros no UI:
+ *   MVP_VANILLA          → MVPs oficiais RO
+ *   MVP_TRUEMMO          → Todos os exclusivos TrueMmo
+ *   MVP_TRUEMMO_FIELD    → Field/dungeon TrueMmo
+ *   MVP_TRUEMMO_VARMUNDT → Instância Varmundt
+ *   MVP_TRUEMMO_CUSTOM   → Custom sem equivalente oficial
  */
-import { MVP_VANILLA }  from './mvps.vanilla'
-import { MVP_TRUEMMO }  from './mvps.truemmo'
+export { MVP_VANILLA } from './mvps.vanilla'
+export { MVP_TRUEMMO, MVP_TRUEMMO_FIELD, MVP_TRUEMMO_VARMUNDT, MVP_TRUEMMO_CUSTOM } from './mvps.truemmo'
 
-export { MVP_VANILLA }  from './mvps.vanilla'
-export { MVP_TRUEMMO }  from './mvps.truemmo'
+import { MVP_VANILLA } from './mvps.vanilla'
+import { MVP_TRUEMMO } from './mvps.truemmo'
 
 export const MVP_LIST = [...MVP_VANILLA, ...MVP_TRUEMMO]
