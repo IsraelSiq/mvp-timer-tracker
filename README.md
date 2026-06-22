@@ -6,6 +6,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue)](#)
 [![Version](https://img.shields.io/badge/version-2.0.0-green)](#)
 
+> 🧪 Procurando o **Simulador de Skill Tree**? Ele foi movido para o repositório dedicado: [ro-skill-simulator](https://github.com/IsraelSiq/ro-skill-simulator)
+
 ---
 
 ## ✨ Features
