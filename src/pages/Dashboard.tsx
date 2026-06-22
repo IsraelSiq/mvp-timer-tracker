@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Shield, Radio, Search, LogIn, LogOut, User, Zap, GitBranch } from 'lucide-react'
 import { MVP_LIST } from '@/data/mvps'
 import { enrichMVP } from '@/utils/timer'
@@ -18,7 +18,7 @@ import { SkillSimulator } from '@/components/SkillSimulator'
 import type { EnrichedMVP, KillLog, KillStatus, GoalMode } from '@/types'
 import toast from 'react-hot-toast'
 
-type StatusFilter = 'mvp-alive' | KillStatus
+type StatusFilter = 'mvp-alive' | KillStatus | 'log'
 type MainTab = 'mvp' | 'skills'
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
@@ -26,6 +26,7 @@ const STATUS_TABS: { value: StatusFilter; label: string }[] = [
   { value: 'window-open', label: '🏁 Janela Aberta' },
   { value: 'soon',        label: '🔵 Em Breve' },
   { value: 'far',         label: '🔴 Longe' },
+  { value: 'log',         label: '📋 Log' },
 ]
 
 export function Dashboard() {
@@ -58,12 +59,21 @@ export function Dashboard() {
     if (statusFilter === 'mvp-alive') {
       return enriched.filter(e => e.status !== 'far' && e.status !== 'soon')
     }
+    if (statusFilter === 'log') return []
     return enriched.filter(e => e.status === statusFilter)
   }, [enriched, statusFilter])
 
   const openCount = enriched.filter(e => e.status === 'window-open').length
   const soonCount = enriched.filter(e => e.status === 'soon').length
   const topTarget = enriched.find(e => e.status === 'window-open' || e.status === 'soon')
+
+  // Auto-analisa ao montar se já houver dados
+  useEffect(() => {
+    if (enriched.some(e => e.status === 'window-open' || e.status === 'soon')) {
+      handleAsk()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleAsk() {
     setAiLoading(true)
@@ -145,7 +155,6 @@ export function Dashboard() {
             <Shield size={11} /> Cloud-ready
           </span>
 
-          {/* Botão Skills Changes */}
           <button
             onClick={() => setShowSkills(true)}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-rag-accent/40 bg-rag-accent/10 text-rag-accent hover:bg-rag-accent/20 transition-colors font-semibold"
@@ -254,6 +263,13 @@ export function Dashboard() {
             </div>
           </div>
 
+          {/* AI Suggestion — sempre visível no topo */}
+          <AISuggestion
+            suggestion={aiSuggestion}
+            loading={aiLoading}
+            onAsk={handleAsk}
+          />
+
           {/* Search + Status filter */}
           <div className="flex flex-wrap gap-3 items-center">
             <div className="relative flex-1 min-w-48">
@@ -287,6 +303,11 @@ export function Dashboard() {
                       {soonCount}
                     </span>
                   )}
+                  {tab.value === 'log' && kills.length > 0 && (
+                    <span className="ml-1.5 bg-rag-muted/20 text-rag-muted rounded-full px-1.5 py-0.5 text-xs">
+                      {kills.length}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -295,51 +316,33 @@ export function Dashboard() {
           {/* Goal selector */}
           <GoalSelector value={goalMode} onChange={setGoalMode} topTarget={topTarget} />
 
-          {/* AI Suggestion */}
-          {(aiSuggestion || aiLoading) && (
-            <AISuggestion
-              suggestion={aiSuggestion}
-              loading={aiLoading}
-              onAsk={handleAsk}
-              onClose={() => setAiSuggestion('')}
-            />
-          )}
-          {!aiSuggestion && !aiLoading && (
-            <div className="flex justify-end">
-              <button
-                onClick={handleAsk}
-                disabled={aiLoading}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-rag-accent/30 bg-rag-accent/5 text-rag-muted hover:text-rag-accent hover:border-rag-accent/60 transition-colors"
-              >
-                <Zap size={11} /> Sugestão IA
-              </button>
-            </div>
-          )}
-
-          {/* MVP Grid */}
-          {filtered.length === 0 ? (
-            <div className="text-center py-16 text-rag-muted">
-              <p className="text-4xl mb-3">🏆</p>
-              <p className="font-medium">Nenhum MVP neste filtro.</p>
-              <p className="text-xs mt-1 text-rag-faint">Tente outro status ou limpe a busca.</p>
-            </div>
+          {/* Kill Log como aba dedicada */}
+          {statusFilter === 'log' ? (
+            <KillLogPanel kills={kills} groupName={groupName} />
           ) : (
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filtered.map(mvp => (
-                <MVPCard
-                  key={mvp.id}
-                  mvp={mvp}
-                  now={now}
-                  onKill={handleKillClick}
-                  onEnemyKill={handleEnemyKill}
-                  player={player}
-                />
-              ))}
-            </div>
+            <>
+              {filtered.length === 0 ? (
+                <div className="text-center py-16 text-rag-muted">
+                  <p className="text-4xl mb-3">🏆</p>
+                  <p className="font-medium">Nenhum MVP neste filtro.</p>
+                  <p className="text-xs mt-1 text-rag-faint">Tente outro status ou limpe a busca.</p>
+                </div>
+              ) : (
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filtered.map(mvp => (
+                    <MVPCard
+                      key={mvp.id}
+                      mvp={mvp}
+                      now={now}
+                      onKill={handleKillClick}
+                      onEnemyKill={handleEnemyKill}
+                      player={player}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
-
-          {/* Kill Log Panel */}
-          <KillLogPanel kills={kills} />
         </main>
       ) : (
         <SkillSimulator />
