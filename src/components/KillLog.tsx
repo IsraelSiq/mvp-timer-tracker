@@ -4,7 +4,7 @@ import { formatDateTime } from '@/utils/timer'
 
 interface Props {
   kills: KillLog[]
-  groupName: string
+  groupName?: string
 }
 
 export function KillLogPanel({ kills, groupName }: Props) {
@@ -13,7 +13,9 @@ export function KillLogPanel({ kills, groupName }: Props) {
       <h2 className="font-body font-semibold text-rag-text text-base flex items-center gap-2">
         <ScrollText size={16} className="text-rag-blue" /> Log do grupo
       </h2>
-      <p className="text-rag-muted text-xs">Registros compartilhados do grupo <strong className="text-rag-text">{groupName}</strong>.</p>
+      {groupName && (
+        <p className="text-rag-muted text-xs">Registros compartilhados do grupo <strong className="text-rag-text">{groupName}</strong>.</p>
+      )}
       {kills.length === 0 ? (
         <div className="border border-dashed border-rag-border rounded-lg p-6 text-center text-rag-muted text-sm">
           Ainda não há kills registradas.

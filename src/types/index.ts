@@ -20,7 +20,8 @@ export type MvpTag =
   | 'fast'
   | 'field'
   | 'disputed'
-  | 'server-exclusive'  // MVP exclusivo do servidor, nao existe no oficial
+  | 'server-exclusive'    // MVP exclusivo do servidor, nao existe no oficial
+  | 'truemmo-exclusive'  // MVP exclusivo do servidor TrueMmo
 
 /**
  * 4 estados possiveis:

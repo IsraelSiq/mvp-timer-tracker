@@ -1,9 +1,10 @@
 import { GOAL_CONFIGS } from '@/types'
-import type { GoalMode } from '@/types'
+import type { GoalMode, EnrichedMVP } from '@/types'
 
 interface Props {
   value: GoalMode
   onChange: (mode: GoalMode) => void
+  topTarget?: EnrichedMVP
 }
 
 export function GoalSelector({ value, onChange }: Props) {
