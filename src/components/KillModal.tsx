@@ -3,9 +3,11 @@ import { X, Clock } from 'lucide-react'
 import type { EnrichedMVP, KillLog } from '@/types'
 
 interface Props {
-  item: EnrichedMVP
+  item?: EnrichedMVP
+  mvp?: EnrichedMVP
   groupName: string
-  defaultKiller: string
+  defaultKiller?: string
+  player?: string
   onConfirm: (log: KillLog) => void
   onClose: () => void
 }
@@ -18,8 +20,9 @@ function toLocalDatetimeInput(date: Date): string {
   )
 }
 
-export function KillModal({ item, groupName, defaultKiller, onConfirm, onClose }: Props) {
-  const [killer,   setKiller]   = useState(defaultKiller)
+export function KillModal({ item: itemProp, mvp, groupName, defaultKiller, player, onConfirm, onClose }: Props) {
+  const item = (itemProp ?? mvp)!
+  const [killer,   setKiller]   = useState(defaultKiller ?? player ?? '')
   const [note,     setNote]     = useState('')
   const [killedAt, setKilledAt] = useState(() => toLocalDatetimeInput(new Date()))
 
