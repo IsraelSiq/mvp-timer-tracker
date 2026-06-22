@@ -22,8 +22,8 @@ type StatusFilter = 'mvp-alive' | KillStatus
 type MainTab = 'mvp' | 'skills'
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
-  { value: 'mvp-alive',   label: 'MVP' },
-  { value: 'window-open', label: '🟢 Janela Aberta' },
+  { value: 'mvp-alive',    label: 'MVP' },
+  { value: 'window-open', label: '🏁 Janela Aberta' },
   { value: 'soon',        label: '🔵 Em Breve' },
   { value: 'far',         label: '🔴 Longe' },
 ]
@@ -31,7 +31,7 @@ const STATUS_TABS: { value: StatusFilter; label: string }[] = [
 export function Dashboard() {
   const now = useNow()
   const { user, loading: authLoading, displayName, signOut } = useAuth()
-  const [groupName,    setGroupName]    = useState(() => localStorage.getItem('rag-group') ?? 'truemmo-main')
+  const [groupName,    setGroupName]    = useState(() => localStorage.getItem('rag-group') ?? 'default')
   const { kills, synced, addKill, clearLocal } = useKills(groupName)
   const [query,        setQuery]        = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('mvp-alive')
@@ -129,7 +129,7 @@ export function Dashboard() {
           </div>
           <div>
             <h1 className="font-body font-bold text-rag-text text-lg leading-tight">Ragnarok MVP Timer</h1>
-            <p className="text-rag-muted text-xs">TRUEMMO · logs em grupo · Gemini AI</p>
+            <p className="text-rag-muted text-xs">Logs em grupo · Realtime</p>
           </div>
         </div>
 
@@ -177,168 +177,185 @@ export function Dashboard() {
         </div>
       </header>
 
-      {/* Tabs principais */}
+      {/* Main Tab Bar */}
       <div className="border-b border-rag-border bg-rag-surface px-6">
-        <div className="flex gap-1 max-w-screen-xl mx-auto">
-          {([
-            { value: 'mvp',    label: 'MVP Timer',        icon: <Shield size={13} /> },
-            { value: 'skills', label: 'Skill Simulator',  icon: <GitBranch size={13} /> },
-          ] as { value: MainTab; label: string; icon: React.ReactNode }[]).map(tab => (
+        <div className="flex gap-0">
+          {[
+            { key: 'mvp' as MainTab, label: '🏆 MVP Timer' },
+            { key: 'skills' as MainTab, label: '⚔️ Skill Simulator' },
+          ].map(tab => (
             <button
-              key={tab.value}
-              onClick={() => setMainTab(tab.value)}
-              className={`flex items-center gap-1.5 text-xs px-4 py-3 border-b-2 transition-colors font-semibold ${
-                mainTab === tab.value
+              key={tab.key}
+              onClick={() => setMainTab(tab.key)}
+              className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
+                mainTab === tab.key
                   ? 'border-rag-accent text-rag-accent'
                   : 'border-transparent text-rag-muted hover:text-rag-text'
               }`}
             >
-              {tab.icon} {tab.label}
+              {tab.label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-6 flex flex-col gap-6">
-
-        {/* ─── Tab: MVP Timer ───────────────────────────────────────────── */}
-        {mainTab === 'mvp' && (
-          <>
-            <GoalSelector value={goalMode} onChange={setGoalMode} />
-
-            <div className="bg-rag-surface border border-rag-border rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-rag-muted" />
+      {mainTab === 'mvp' ? (
+        <main className="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
+          {/* Settings row */}
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-rag-muted font-medium flex items-center gap-1">
+                <GitBranch size={11} /> Grupo
+              </label>
+              <div className="flex gap-2">
                 <input
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  placeholder="Buscar MVP ou mapa..."
-                  className="w-full bg-rag-bg border border-rag-border rounded-lg pl-8 pr-3 py-2 text-rag-text text-sm outline-none focus:border-rag-accent"
+                  value={groupName}
+                  onChange={e => setGroupName(e.target.value)}
+                  className="bg-rag-surface2 border border-rag-border rounded px-3 py-1.5 text-sm text-rag-text w-40 focus:outline-none focus:border-rag-accent"
+                  placeholder="nome-do-grupo"
                 />
+                <button
+                  onClick={saveGroup}
+                  className="text-xs px-3 py-1.5 rounded border border-rag-border bg-rag-surface2 text-rag-muted hover:text-rag-text transition-colors"
+                >
+                  Salvar
+                </button>
               </div>
-              {!user && (
-                <input
-                  id="player-nick"
-                  name="player-nick"
-                  value={playerOverride}
-                  onChange={e => setPlayerOverride(e.target.value)}
-                  onBlur={savePlayer}
-                  placeholder="Seu nick (sem login)"
-                  className="bg-rag-bg border border-rag-border rounded-lg px-3 py-2 text-rag-text text-sm outline-none focus:border-rag-accent"
-                />
-              )}
-              <input
-                id="group-name"
-                name="group-name"
-                value={groupName}
-                onChange={e => setGroupName(e.target.value)}
-                onBlur={saveGroup}
-                placeholder="Grupo / clã / tag"
-                className="bg-rag-bg border border-rag-border rounded-lg px-3 py-2 text-rag-text text-sm outline-none focus:border-rag-accent"
-              />
-              <button
-                onClick={handleClearLocal}
-                className={`rounded-lg px-3 py-2 text-sm transition-colors border ${
-                  confirmClear
-                    ? 'bg-rag-accent/20 border-rag-accent text-rag-accent font-bold'
-                    : 'bg-rag-surface2 border-rag-border text-rag-muted hover:border-rag-accent/50 hover:text-rag-text'
-                }`}
-              >
-                {confirmClear ? '⚠️ Confirmar limpeza?' : 'Limpar registros locais'}
-              </button>
             </div>
 
-            {!authLoading && !user && (
-              <div
-                onClick={() => setShowAuth(true)}
-                className="cursor-pointer flex items-center gap-3 bg-rag-accent/10 border border-rag-accent/30 rounded-xl px-4 py-3 text-sm text-rag-accent hover:bg-rag-accent/15 transition-colors"
-              >
-                <LogIn size={16} />
-                <span>
-                  <strong>Faça login</strong> para registrar kills de MVP. O log de todos os jogadores fica visível para todos!
-                </span>
+            {!user && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-rag-muted font-medium flex items-center gap-1">
+                  <User size={11} /> Personagem
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    value={playerOverride}
+                    onChange={e => setPlayerOverride(e.target.value)}
+                    onBlur={savePlayer}
+                    className="bg-rag-surface2 border border-rag-border rounded px-3 py-1.5 text-sm text-rag-text w-40 focus:outline-none focus:border-rag-accent"
+                    placeholder="Seu personagem"
+                  />
+                </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { label: 'Janelas abertas',   value: openCount,              color: 'text-green-400'  },
-                { label: 'Abrindo em breve',  value: soonCount,              color: 'text-yellow-400' },
-                { label: 'Melhor alvo agora', value: topTarget?.name ?? '—', color: 'text-rag-accent'  },
-              ].map(kpi => (
-                <div key={kpi.label} className="bg-rag-surface border border-rag-border rounded-xl p-4">
-                  <span className="block text-rag-muted text-xs uppercase tracking-wider mb-1">{kpi.label}</span>
-                  <strong className={`text-xl font-bold tabular-nums ${kpi.color}`}>{kpi.value}</strong>
-                </div>
-              ))}
+            <div className="flex gap-2 ml-auto items-end">
+              <button
+                onClick={handleClearLocal}
+                className={`text-xs px-3 py-1.5 rounded border transition-colors ${
+                  confirmClear
+                    ? 'border-red-700/60 bg-red-900/20 text-red-400'
+                    : 'border-rag-border bg-rag-surface2 text-rag-muted hover:text-rag-text'
+                }`}
+              >
+                {confirmClear ? 'Confirmar limpeza?' : 'Limpar local'}
+              </button>
             </div>
+          </div>
 
-            <div className="flex gap-2 flex-wrap">
+          {/* Search + Status filter */}
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-48">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-rag-muted" />
+              <input
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Buscar MVP ou mapa..."
+                className="w-full bg-rag-surface2 border border-rag-border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-rag-accent"
+              />
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
               {STATUS_TABS.map(tab => (
                 <button
                   key={tab.value}
                   onClick={() => setStatusFilter(tab.value)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors font-medium ${
                     statusFilter === tab.value
-                      ? 'bg-rag-accent/20 border-rag-accent text-rag-accent font-bold'
-                      : 'bg-rag-surface border-rag-border text-rag-muted hover:text-rag-text'
+                      ? 'border-rag-accent bg-rag-accent/15 text-rag-accent'
+                      : 'border-rag-border bg-rag-surface2 text-rag-muted hover:text-rag-text'
                   }`}
                 >
-                  {tab.value !== 'mvp-alive' && (
-                    <span className="ml-1.5 text-rag-muted/70">
-                      ({enriched.filter(e => e.status === tab.value).length})
+                  {tab.label}
+                  {tab.value === 'window-open' && openCount > 0 && (
+                    <span className="ml-1.5 bg-rag-accent/20 text-rag-accent rounded-full px-1.5 py-0.5 text-xs">
+                      {openCount}
                     </span>
                   )}
-                  {tab.label}
+                  {tab.value === 'soon' && soonCount > 0 && (
+                    <span className="ml-1.5 bg-rag-blue/20 text-rag-blue rounded-full px-1.5 py-0.5 text-xs">
+                      {soonCount}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filtered.length === 0 ? (
-                  <div className="col-span-full border border-dashed border-rag-border rounded-xl p-10 text-center text-rag-muted text-sm">
-                    Nenhum MVP nessa categoria no momento.
-                  </div>
-                ) : (
-                  filtered.map(item => (
-                    <MVPCard
-                      key={item.id}
-                      item={item}
-                      now={now}
-                      onKill={handleKillClick}
-                      onEnemyKill={handleEnemyKill}
-                    />
-                  ))
-                )}
-              </div>
+          {/* Goal selector */}
+          <GoalSelector value={goalMode} onChange={setGoalMode} topTarget={topTarget} />
 
-              <aside className="bg-rag-surface border border-rag-border rounded-xl p-4 flex flex-col gap-6 h-fit sticky top-6">
-                <AISuggestion suggestion={aiSuggestion} loading={aiLoading} onAsk={handleAsk} />
-                <hr className="border-rag-border" />
-                <KillLogPanel kills={kills} groupName={groupName} />
-              </aside>
+          {/* AI Suggestion */}
+          {(aiSuggestion || aiLoading) && (
+            <AISuggestion
+              suggestion={aiSuggestion}
+              loading={aiLoading}
+              onAsk={handleAsk}
+              onClose={() => setAiSuggestion('')}
+            />
+          )}
+          {!aiSuggestion && !aiLoading && (
+            <div className="flex justify-end">
+              <button
+                onClick={handleAsk}
+                disabled={aiLoading}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-rag-accent/30 bg-rag-accent/5 text-rag-muted hover:text-rag-accent hover:border-rag-accent/60 transition-colors"
+              >
+                <Zap size={11} /> Sugestão IA
+              </button>
             </div>
-          </>
-        )}
+          )}
 
-        {/* ─── Tab: Skill Simulator ─────────────────────────────────────── */}
-        {mainTab === 'skills' && (
-          <SkillSimulator />
-        )}
-      </div>
+          {/* MVP Grid */}
+          {filtered.length === 0 ? (
+            <div className="text-center py-16 text-rag-muted">
+              <p className="text-4xl mb-3">🏆</p>
+              <p className="font-medium">Nenhum MVP neste filtro.</p>
+              <p className="text-xs mt-1 text-rag-faint">Tente outro status ou limpe a busca.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filtered.map(mvp => (
+                <MVPCard
+                  key={mvp.id}
+                  mvp={mvp}
+                  now={now}
+                  onKill={handleKillClick}
+                  onEnemyKill={handleEnemyKill}
+                  player={player}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Kill Log Panel */}
+          <KillLogPanel kills={kills} />
+        </main>
+      ) : (
+        <SkillSimulator />
+      )}
 
       {selected && (
         <KillModal
-          item={selected}
+          mvp={selected}
+          player={player}
           groupName={groupName}
-          defaultKiller={player}
-          onConfirm={log => { addKill(log); setSelected(null); toast.success(`Kill de ${log.mvp_name} registrada!`) }}
+          onConfirm={(log) => { addKill(log); setSelected(null) }}
           onClose={() => setSelected(null)}
         />
       )}
 
-      {showAuth   && <AuthModal         onClose={() => setShowAuth(false)}   />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       {showSkills && <SkillChangesPanel onClose={() => setShowSkills(false)} />}
     </div>
   )
