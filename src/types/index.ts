@@ -1,3 +1,9 @@
+export type MVPSource =
+  | 'vanilla'           // MVP oficial do RO
+  | 'truemmo-field'     // MVP exclusivo TrueMmo — spawn de campo/dungeon
+  | 'truemmo-varmundt'  // MVP exclusivo TrueMmo — instância Varmundt
+  | 'truemmo-custom'    // MVP custom do servidor TrueMmo
+
 export interface MVP {
   id: number
   mobId: number      // mob ID no banco do RO (usado para imagem e referencia)
@@ -9,6 +15,7 @@ export interface MVP {
   notes: string
   difficulty: 'easy' | 'medium' | 'hard'
   tags: MvpTag[]
+  source?: MVPSource  // origem do MVP — permite filtrar por servidor/modo
   mvpPoints?: number  // pontos de MVP concedidos ao matar
   image?: string      // URL da imagem do mob (divine-pride.net CDN ou custom)
 }
