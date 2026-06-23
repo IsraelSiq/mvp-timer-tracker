@@ -17,9 +17,19 @@ function buildSrcList(aegisName?: string, mobId?: number): string[] {
   return srcs
 }
 
+// Estilo aplicado em todos os sprites para remover fundo branco no dark mode:
+//   mix-blend-mode: darken  → o pixel mais escuro "vence"; branco some no bg escuro
+//   filter: drop-shadow     → glow no contorno real do sprite (não no bounding box)
+//   image-rendering: pixelated → preserva o pixel art sem blur
+const SPRITE_STYLE: React.CSSProperties = {
+  mixBlendMode: 'darken',
+  imageRendering: 'pixelated',
+  filter: 'drop-shadow(0 0 6px rgba(100, 200, 255, 0.3))',
+}
+
 function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: number; name: string }) {
   const srcs = buildSrcList(aegisName, mobId)
-  const [idx, setIdx]     = useState(0)
+  const [idx, setIdx]       = useState(0)
   const [failed, setFailed] = useState(srcs.length === 0)
 
   useEffect(() => {
@@ -44,8 +54,8 @@ function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: numb
       width={48}
       height={48}
       loading="lazy"
-      className="w-12 h-12 object-contain rounded-lg bg-rag-bg border border-rag-border shrink-0"
-      style={{ imageRendering: 'pixelated' }}
+      className="w-12 h-12 object-contain shrink-0"
+      style={SPRITE_STYLE}
       onError={() => {
         if (idx + 1 < srcs.length) setIdx(i => i + 1)
         else setFailed(true)
