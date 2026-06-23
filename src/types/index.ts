@@ -12,6 +12,7 @@ export interface MVP {
   tags: MvpTag[]
   mvpPoints?: number  // pontos de MVP concedidos ao matar
   image?: string      // URL da imagem do mob (divine-pride.net CDN ou custom)
+  gifUrl?: string     // URL do GIF animado do mob (gnjoy.com CDN via aegisName, ou divine-pride fallback)
 }
 
 export type MvpTag =
