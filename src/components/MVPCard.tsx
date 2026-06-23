@@ -3,17 +3,16 @@ import { Clock, MapPin, Star, ExternalLink, Skull, Swords, Shield } from 'lucide
 import type { EnrichedMVP } from '@/types'
 import { cn } from '@/lib/utils'
 
-const KRO_BASE    = 'https://imgc1.gnjoy.com/games/ro1/object/201310/job/Monster'
+const IROW_BASE = 'https://db.irowiki.org/image/monster'
 const DP_GIF_BASE = 'https://static.divine-pride.net/images/mobs/gif'
-const DP_PNG_BASE = 'https://static.divine-pride.net/images/mobs/png'
+const KRO_BASE    = 'https://imgc1.gnjoy.com/games/ro1/object/201310/job/Monster'
 
-// Ordem: DP GIF → DP PNG → kRO GIF
-// Divine Pride tem cobertura completa para todos os MVPs clássicos
+// Ordem: iROWiki PNG → DP GIF → kRO GIF (por aegisName)
 function buildSrcList(aegisName?: string, mobId?: number): string[] {
   const srcs: string[] = []
   if (mobId && mobId > 0) {
+    srcs.push(`${IROW_BASE}/${mobId}.png`)
     srcs.push(`${DP_GIF_BASE}/${mobId}.gif`)
-    srcs.push(`${DP_PNG_BASE}/${mobId}.png`)
   }
   if (aegisName) srcs.push(`${KRO_BASE}/${aegisName}.gif`)
   return srcs
@@ -171,8 +170,8 @@ export function MVPCard({
     ? (data.minRespawnDate.getTime() + data.maxRespawnDate.getTime()) / 2
     : null
   const timeLeft   = midMs ? Math.max(0, midMs - now) : null
-  const dpUrl      = data.mobId > 0
-    ? `https://db.divine-pride.net/database/monster/${data.mobId}`
+  const irowUrl    = data.mobId > 0
+    ? `https://db.irowiki.org/db/monster-info/${data.mobId}/`
     : null
   const statusInfo = STATUS_LABEL[status]
 
@@ -213,14 +212,14 @@ export function MVPCard({
                 <Star size={9} fill="currentColor" />{data.mvpPoints}
               </span>
             )}
-            {dpUrl && (
+            {irowUrl && (
               <a
-                href={dpUrl}
+                href={irowUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={e => e.stopPropagation()}
                 className="text-rag-muted hover:text-rag-accent transition-colors"
-                title="Ver no Divine Pride"
+                title="Ver no iROWiki"
               >
                 <ExternalLink size={10} />
               </a>
