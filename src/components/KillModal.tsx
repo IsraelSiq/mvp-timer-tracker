@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Clock } from 'lucide-react'
+import { X, Clock, MapPin } from 'lucide-react'
 import type { EnrichedMVP, KillLog } from '@/types'
 
 interface Props {
@@ -22,9 +22,13 @@ function toLocalDatetimeInput(date: Date): string {
 
 export function KillModal({ item: itemProp, mvp, groupName, defaultKiller, player, onConfirm, onClose }: Props) {
   const item = (itemProp ?? mvp)!
+  const maps = item.maps && item.maps.length > 0 ? item.maps : [{ label: item.map, id: item.map }]
+  const isMultiMap = maps.length > 1
+
   const [killer,   setKiller]   = useState(defaultKiller ?? player ?? '')
   const [note,     setNote]     = useState('')
   const [killedAt, setKilledAt] = useState(() => toLocalDatetimeInput(new Date()))
+  const [mapId,    setMapId]    = useState(maps[0].id)
 
   function submit() {
     onConfirm({
@@ -34,6 +38,7 @@ export function KillModal({ item: itemProp, mvp, groupName, defaultKiller, playe
       killed_at:  new Date(killedAt).toISOString(),
       note:       note.trim(),
       group_name: groupName,
+      map_id:     mapId,
     })
   }
 
@@ -54,6 +59,33 @@ export function KillModal({ item: itemProp, mvp, groupName, defaultKiller, playe
         </div>
 
         <div className="flex flex-col gap-3">
+
+          {/* Seletor de mapa — só aparece se tiver múltiplos spawns */}
+          {isMultiMap && (
+            <div>
+              <label className="flex items-center gap-1.5 text-rag-muted text-xs mb-1">
+                <MapPin size={11} /> Em qual mapa você o matou?
+              </label>
+              <div className="grid grid-cols-1 gap-1.5">
+                {maps.map(m => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setMapId(m.id)}
+                    className={`text-left px-3 py-2 rounded-lg border text-sm transition-all ${
+                      mapId === m.id
+                        ? 'border-rag-accent bg-rag-accent/15 text-rag-accent font-semibold'
+                        : 'border-rag-border bg-rag-bg text-rag-muted hover:border-rag-accent/50 hover:text-rag-text'
+                    }`}
+                  >
+                    <span className="font-medium">{m.label}</span>
+                    <span className="ml-2 text-xs opacity-60 font-mono">{m.id}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-rag-muted text-xs mb-1">Quem matou?</label>
             <input

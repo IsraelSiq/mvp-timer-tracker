@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Clock, MapPin, Star, ExternalLink, Skull, Swords, Shield } from 'lucide-react'
-import type { EnrichedMVP } from '@/types'
+import { Clock, MapPin, Star, ExternalLink, Skull, Swords, Shield, Zap } from 'lucide-react'
+import type { EnrichedMVP, MvpElement } from '@/types'
 import { cn } from '@/lib/utils'
 
-const IROW_BASE = 'https://db.irowiki.org/image/monster'
-const DP_GIF_BASE = 'https://static.divine-pride.net/images/mobs/gif'
-const KRO_BASE    = 'https://imgc1.gnjoy.com/games/ro1/object/201310/job/Monster'
+const IROW_BASE    = 'https://db.irowiki.org/image/monster'
+const DP_GIF_BASE  = 'https://static.divine-pride.net/images/mobs/gif'
+const KRO_BASE     = 'https://imgc1.gnjoy.com/games/ro1/object/201310/job/Monster'
 
-// Ordem: iROWiki PNG → DP GIF → kRO GIF (por aegisName)
 function buildSrcList(aegisName?: string, mobId?: number): string[] {
   const srcs: string[] = []
   if (mobId && mobId > 0) {
@@ -16,6 +15,33 @@ function buildSrcList(aegisName?: string, mobId?: number): string[] {
   }
   if (aegisName) srcs.push(`${KRO_BASE}/${aegisName}.gif`)
   return srcs
+}
+
+// Cores por elemento
+const ELEMENT_COLOR: Record<MvpElement, string> = {
+  'Neutro':     'bg-gray-700/60 text-gray-300',
+  'Água':       'bg-blue-900/60 text-blue-300',
+  'Terra':      'bg-yellow-900/60 text-yellow-300',
+  'Fogo':       'bg-red-900/60 text-red-300',
+  'Vento':      'bg-teal-900/60 text-teal-300',
+  'Veneno':     'bg-purple-900/60 text-purple-300',
+  'Sagrado':    'bg-yellow-100/20 text-yellow-100',
+  'Sombra':     'bg-indigo-900/60 text-indigo-300',
+  'Fantasma':   'bg-violet-900/60 text-violet-300',
+  'Morto-vivo': 'bg-zinc-800/80 text-zinc-400',
+}
+
+const ELEMENT_ICON: Record<MvpElement, string> = {
+  'Neutro':     '⬜',
+  'Água':       '💧',
+  'Terra':      '🪨',
+  'Fogo':       '🔥',
+  'Vento':      '🌀',
+  'Veneno':     '☠️',
+  'Sagrado':    '✨',
+  'Sombra':     '🌑',
+  'Fantasma':   '👻',
+  'Morto-vivo': '💀',
 }
 
 const FRAME: Record<string, { border: string; glow: string; typebar: string; label: string }> = {
@@ -84,17 +110,10 @@ function SpriteFallback({ name, difficulty }: { name: string; difficulty: string
   const grad    = FALLBACK_GRADIENT[difficulty] ?? FALLBACK_GRADIENT.hard
   const textCls = FALLBACK_TEXT[difficulty]     ?? FALLBACK_TEXT.hard
   const ringCls = FALLBACK_RING[difficulty]      ?? FALLBACK_RING.hard
-
   return (
     <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
-      <div className={cn(
-        'w-20 h-20 rounded-2xl ring-2 flex items-center justify-center',
-        'bg-gradient-to-br select-none',
-        grad, ringCls,
-      )}>
-        <span className={cn('text-4xl font-black font-display tracking-tighter', textCls)}>
-          {initial}
-        </span>
+      <div className={cn('w-20 h-20 rounded-2xl ring-2 flex items-center justify-center bg-gradient-to-br select-none', grad, ringCls)}>
+        <span className={cn('text-4xl font-black font-display tracking-tighter', textCls)}>{initial}</span>
       </div>
       <span className="text-[9px] text-rag-muted/50 font-mono tracking-widest uppercase">sem sprite</span>
     </div>
@@ -107,31 +126,13 @@ function MobSprite({ aegisName, mobId, name, difficulty }: {
   const srcs = buildSrcList(aegisName, mobId)
   const [idx, setIdx]       = useState(0)
   const [failed, setFailed] = useState(srcs.length === 0)
-
-  useEffect(() => {
-    setIdx(0)
-    setFailed(srcs.length === 0)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mobId, aegisName])
-
-  if (failed || srcs.length === 0) {
-    return <SpriteFallback name={name} difficulty={difficulty} />
-  }
-
+  useEffect(() => { setIdx(0); setFailed(srcs.length === 0) }, [mobId, aegisName]) // eslint-disable-line
+  if (failed || srcs.length === 0) return <SpriteFallback name={name} difficulty={difficulty} />
   return (
-    <img
-      key={srcs[idx]}
-      src={srcs[idx]}
-      alt={name}
-      width={160}
-      height={160}
-      loading="lazy"
+    <img key={srcs[idx]} src={srcs[idx]} alt={name} width={160} height={160} loading="lazy"
       className="w-40 h-40 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
       style={{ imageRendering: 'pixelated' }}
-      onError={() => {
-        if (idx + 1 < srcs.length) setIdx(i => i + 1)
-        else setFailed(true)
-      }}
+      onError={() => { if (idx + 1 < srcs.length) setIdx(i => i + 1); else setFailed(true) }}
     />
   )
 }
@@ -170,10 +171,11 @@ export function MVPCard({
     ? (data.minRespawnDate.getTime() + data.maxRespawnDate.getTime()) / 2
     : null
   const timeLeft   = midMs ? Math.max(0, midMs - now) : null
-  const irowUrl    = data.mobId > 0
-    ? `https://db.irowiki.org/db/monster-info/${data.mobId}/`
-    : null
+  const irowUrl    = data.mobId > 0 ? `https://db.irowiki.org/db/monster-info/${data.mobId}/` : null
   const statusInfo = STATUS_LABEL[status]
+
+  // Mapas de spawn
+  const spawnMaps = data.maps && data.maps.length > 0 ? data.maps : [{ label: data.map, id: data.map }]
 
   function handleKill(e: React.MouseEvent) {
     e.stopPropagation()
@@ -191,18 +193,14 @@ export function MVPCard({
       className={cn(
         'p-[2px] rounded-2xl bg-gradient-to-b cursor-pointer transition-all duration-200',
         'hover:scale-[1.02] active:scale-[0.98]',
-        frame.border,
-        frame.glow,
-        STATUS_EXTRA_GLOW[status],
+        frame.border, frame.glow, STATUS_EXTRA_GLOW[status],
       )}
       onClick={() => onSelect?.(data!)}
     >
       <div className="rounded-2xl bg-[#0f1020] overflow-hidden flex flex-col">
 
         {/* HEADER */}
-        <div className="px-3 pt-2.5 pb-1.5 flex items-center justify-between gap-2
-                        bg-gradient-to-r from-[#1a1d30] to-[#12142a]
-                        border-b border-white/5">
+        <div className="px-3 pt-2.5 pb-1.5 flex items-center justify-between gap-2 bg-gradient-to-r from-[#1a1d30] to-[#12142a] border-b border-white/5">
           <span className="font-display text-[10px] text-rag-text leading-tight truncate tracking-wide">
             {data.name}
           </span>
@@ -213,96 +211,90 @@ export function MVPCard({
               </span>
             )}
             {irowUrl && (
-              <a
-                href={irowUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <a href={irowUrl} target="_blank" rel="noopener noreferrer"
                 onClick={e => e.stopPropagation()}
                 className="text-rag-muted hover:text-rag-accent transition-colors"
-                title="Ver no iROWiki"
-              >
+                title="Ver no iROWiki">
                 <ExternalLink size={10} />
               </a>
             )}
           </div>
         </div>
 
-        {/* ARTE */}
-        <div className="relative flex items-center justify-center bg-gradient-to-b
-                        from-[#080a14] to-[#0d1020] h-44 overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.04] select-none pointer-events-none
-                          flex items-center justify-center text-6xl text-white">
+        {/* SPRITE */}
+        <div className="relative flex items-center justify-center bg-gradient-to-b from-[#080a14] to-[#0d1020] h-44 overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.04] select-none pointer-events-none flex items-center justify-center text-6xl text-white">
             &#x16A0;&#x16B7;&#x16D2;&#x16A2;
           </div>
-          <MobSprite
-            aegisName={data.aegisName}
-            mobId={data.mobId}
-            name={data.name}
-            difficulty={data.difficulty}
-          />
+          <MobSprite aegisName={data.aegisName} mobId={data.mobId} name={data.name} difficulty={data.difficulty} />
         </div>
 
-        {/* TYPE BAR */}
-        <div className={cn(
-          'px-3 py-1 flex items-center justify-between',
-          'bg-gradient-to-r text-[10px] font-semibold',
-          frame.typebar,
-          'border-y border-white/10',
-        )}>
-          <span className="text-white/80 italic">MVP Boss &mdash; {frame.label}</span>
-          <div className="flex items-center gap-1 text-rag-muted">
-            <MapPin size={9} />
-            <span className="truncate max-w-[80px] text-white/60">{data.map}</span>
+        {/* ELEMENT / SIZE / WEAKNESS */}
+        {(data.element || data.size || data.weakness) && (
+          <div className="px-2.5 py-1.5 flex items-center gap-1.5 flex-wrap bg-[#0a0c1a] border-b border-white/5">
+            {data.element && (
+              <span className={cn('text-[9px] font-semibold px-1.5 py-0.5 rounded-full', ELEMENT_COLOR[data.element])}>
+                {ELEMENT_ICON[data.element]} {data.element}
+              </span>
+            )}
+            {data.size && (
+              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-white/5 text-white/50">
+                {data.size}
+              </span>
+            )}
+            {data.weakness && (
+              <span className={cn('text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5', ELEMENT_COLOR[data.weakness])}>
+                <Zap size={8} /> {data.weakness}
+              </span>
+            )}
           </div>
+        )}
+
+        {/* TYPE BAR */}
+        <div className={cn('px-3 py-1 flex items-center justify-between bg-gradient-to-r text-[10px] font-semibold', frame.typebar, 'border-b border-white/10')}>
+          <span className="text-white/80 italic">MVP Boss &mdash; {frame.label}</span>
+        </div>
+
+        {/* SPAWN MAPS */}
+        <div className="px-2.5 py-1.5 bg-[#090b19] border-b border-white/5 flex flex-col gap-0.5">
+          {spawnMaps.map(m => (
+            <div key={m.id} className="flex items-center gap-1">
+              <MapPin size={8} className="text-rag-muted shrink-0" />
+              <span className="text-[9px] text-white/60 truncate">{m.label}</span>
+              <span className="text-[8px] text-rag-muted/50 font-mono ml-auto shrink-0">{m.id}</span>
+            </div>
+          ))}
         </div>
 
         {/* TEXT BOX */}
-        <div className="px-3 py-2 bg-[#0c0e1c] flex flex-col gap-1 min-h-[52px]">
-          <p className={cn('text-[11px] font-semibold', statusInfo.color)}>
-            {statusInfo.text}
-          </p>
+        <div className="px-3 py-2 bg-[#0c0e1c] flex flex-col gap-1 min-h-[48px]">
+          <p className={cn('text-[11px] font-semibold', statusInfo.color)}>{statusInfo.text}</p>
           {timeLeft !== null && timeLeft > 0 && (
             <p className="flex items-center gap-1 text-[11px] text-rag-muted">
               <Clock size={9} />
               <span className="font-mono">{formatCountdown(timeLeft)}</span>
             </p>
           )}
-          <p className="text-[10px] text-rag-muted/50 font-mono mt-0.5">#{data.mobId}</p>
         </div>
 
         {/* FOOTER */}
-        <div className="px-2.5 pb-2.5 pt-1.5 flex items-center justify-between gap-2
-                        bg-gradient-to-r from-[#0e1022] to-[#0c0f20]
-                        border-t border-white/5">
+        <div className="px-2.5 pb-2.5 pt-1.5 flex items-center justify-between gap-2 bg-gradient-to-r from-[#0e1022] to-[#0c0f20] border-t border-white/5">
           <div className="flex items-center gap-1.5">
             {(onKill || onRegisterKill) && (
-              <button
-                onClick={handleKill}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg
-                           bg-rag-accent/20 hover:bg-rag-accent/40
-                           text-rag-accent text-[10px] font-bold
-                           border border-rag-accent/30 transition-all
-                           hover:shadow-[0_0_8px_rgba(192,57,43,0.5)]"
-              >
+              <button onClick={handleKill}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rag-accent/20 hover:bg-rag-accent/40 text-rag-accent text-[10px] font-bold border border-rag-accent/30 transition-all hover:shadow-[0_0_8px_rgba(192,57,43,0.5)]">
                 <Swords size={10} /> Kill
               </button>
             )}
             {onEnemyKill && (
-              <button
-                onClick={handleEnemyKill}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-red-900/20 hover:bg-red-900/40
-                           text-red-400 text-[10px] font-bold
-                           border border-red-800/30 transition-all"
-                title="Morto por inimigo"
-              >
+              <button onClick={handleEnemyKill}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-900/20 hover:bg-red-900/40 text-red-400 text-[10px] font-bold border border-red-800/30 transition-all"
+                title="Morto por inimigo">
                 <Skull size={10} />
               </button>
             )}
           </div>
-          <div className="flex items-center gap-1 text-[10px] font-mono
-                          text-rag-muted/70 border border-white/10
-                          rounded px-1.5 py-0.5 bg-black/30">
+          <div className="flex items-center gap-1 text-[10px] font-mono text-rag-muted/70 border border-white/10 rounded px-1.5 py-0.5 bg-black/30">
             <Shield size={8} />
             {data.minRespawn}~{data.maxRespawn}m
           </div>

@@ -1,18 +1,44 @@
+export type MvpElement =
+  | 'Neutro'
+  | 'Água'
+  | 'Terra'
+  | 'Fogo'
+  | 'Vento'
+  | 'Veneno'
+  | 'Sagrado'
+  | 'Sombra'
+  | 'Fantasma'
+  | 'Morto-vivo'
+
+export type MvpSize = 'Pequeno' | 'Médio' | 'Grande'
+
+export interface MvpMap {
+  label: string  // ex: 'Campos de Prontera'
+  id: string     // ex: 'prt_field08'
+}
+
 export interface MVP {
   id: number
-  mobId: number      // mob ID no banco do RO (usado para imagem e referencia)
-  aegisName?: string // nome interno do mob no KRO (ex: AMON_RA) — usado para GIF oficial gnjoy.com
+  mobId: number
+  aegisName?: string
   name: string
+  /** Mapa principal (legado — mantido para compatibilidade) */
   map: string
-  minRespawn: number // minutes
-  maxRespawn: number // minutes
-  priority: number   // 1-10
+  /** Lista completa de mapas de spawn. Se vazio, usa `map`. */
+  maps?: MvpMap[]
+  minRespawn: number
+  maxRespawn: number
+  priority: number
   notes: string
   difficulty: 'easy' | 'medium' | 'hard'
   tags: MvpTag[]
-  mvpPoints?: number  // pontos de MVP concedidos ao matar
-  image?: string      // URL da imagem do mob (divine-pride.net CDN ou custom)
-  gifUrl?: string     // URL do GIF animado do mob (gnjoy.com CDN via aegisName, ou divine-pride fallback)
+  mvpPoints?: number
+  image?: string
+  gifUrl?: string
+  element?: MvpElement
+  size?: MvpSize
+  /** Elemento fraco (recebe mais dano) */
+  weakness?: MvpElement
 }
 
 export type MvpTag =
@@ -22,19 +48,9 @@ export type MvpTag =
   | 'fast'
   | 'field'
   | 'disputed'
-  | 'server-exclusive'    // MVP exclusivo do servidor, nao existe no oficial
-  | 'truemmo-exclusive'  // MVP exclusivo do servidor TrueMmo
+  | 'server-exclusive'
+  | 'truemmo-exclusive'
 
-/**
- * 4 estados possiveis:
- *
- * 'mvp'          - sem registro de morte (desconhecido)
- * 'window-open'  - morte registrada + nasceu ha menos de 5 min
- * 'soon'         - morte registrada + nasce em 0-5 min
- * 'far'          - morte registrada + falta > 5 min
- *
- * Se passou mais de 5 min apos a janela maxima => volta a 'mvp' (dado obsoleto)
- */
 export type KillStatus = 'mvp' | 'window-open' | 'soon' | 'far'
 
 export interface KillLog {
@@ -42,11 +58,13 @@ export interface KillLog {
   mvp_id: number
   mvp_name: string
   killer: string
-  killed_at: string  // ISO string
+  killed_at: string
   note: string
   group_name: string
   created_at?: string
   killed_by_enemy?: boolean
+  /** Mapa onde o MVP foi morto (quando tem múltiplos spawns) */
+  map_id?: string
 }
 
 export interface EnrichedMVP extends MVP {
@@ -54,11 +72,10 @@ export interface EnrichedMVP extends MVP {
   status: KillStatus
   minRespawnDate: Date | null
   maxRespawnDate: Date | null
-  windowProgress: number // 0-100
+  windowProgress: number
   score: number
 }
 
-// ─ Objetivo / Modo de jogo ────────────────────────────────────────────
 export type GoalMode =
   | 'default'
   | 'mvp-points'
