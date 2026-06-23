@@ -17,7 +17,6 @@ function buildSrcList(aegisName?: string, mobId?: number): string[] {
   return srcs
 }
 
-// Cores por elemento
 const ELEMENT_COLOR: Record<MvpElement, string> = {
   'Neutro':     'bg-gray-700/60 text-gray-300',
   'Água':       'bg-blue-900/60 text-blue-300',
@@ -174,7 +173,6 @@ export function MVPCard({
   const irowUrl    = data.mobId > 0 ? `https://db.irowiki.org/db/monster-info/${data.mobId}/` : null
   const statusInfo = STATUS_LABEL[status]
 
-  // Mapas de spawn
   const spawnMaps = data.maps && data.maps.length > 0 ? data.maps : [{ label: data.map, id: data.map }]
 
   function handleKill(e: React.MouseEvent) {
@@ -191,7 +189,8 @@ export function MVPCard({
   return (
     <div
       className={cn(
-        'p-[2px] rounded-2xl bg-gradient-to-b cursor-pointer transition-all duration-200',
+        // self-start impede o card de esticar verticalmente no grid/flex da linha
+        'self-start p-[2px] rounded-2xl bg-gradient-to-b cursor-pointer transition-all duration-200',
         'hover:scale-[1.02] active:scale-[0.98]',
         frame.border, frame.glow, STATUS_EXTRA_GLOW[status],
       )}
@@ -255,10 +254,10 @@ export function MVPCard({
           <span className="text-white/80 italic">MVP Boss &mdash; {frame.label}</span>
         </div>
 
-        {/* SPAWN MAPS */}
-        <div className="px-2.5 py-1.5 bg-[#090b19] border-b border-white/5 flex flex-col gap-0.5">
+        {/* SPAWN MAPS — altura fixa, scroll interno se tiver muitos */}
+        <div className="px-2.5 py-1.5 bg-[#090b19] border-b border-white/5 h-[52px] overflow-y-auto flex flex-col gap-0.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {spawnMaps.map(m => (
-            <div key={m.id} className="flex items-center gap-1">
+            <div key={m.id} className="flex items-center gap-1 shrink-0">
               <MapPin size={8} className="text-rag-muted shrink-0" />
               <span className="text-[9px] text-white/60 truncate">{m.label}</span>
               <span className="text-[8px] text-rag-muted/50 font-mono ml-auto shrink-0">{m.id}</span>
