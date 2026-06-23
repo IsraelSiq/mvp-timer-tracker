@@ -38,6 +38,25 @@ const FRAME: Record<string, { border: string; glow: string; typebar: string; lab
   },
 }
 
+// Gradientes do avatar-fallback por dificuldade
+const FALLBACK_GRADIENT: Record<string, string> = {
+  easy:   'from-emerald-900 via-emerald-800 to-emerald-950',
+  medium: 'from-amber-900 via-yellow-800 to-amber-950',
+  hard:   'from-rose-900 via-red-800 to-rose-950',
+}
+
+const FALLBACK_TEXT: Record<string, string> = {
+  easy:   'text-emerald-300',
+  medium: 'text-yellow-300',
+  hard:   'text-rose-300',
+}
+
+const FALLBACK_RING: Record<string, string> = {
+  easy:   'ring-emerald-700/40',
+  medium: 'ring-yellow-600/40',
+  hard:   'ring-rose-700/40',
+}
+
 const STATUS_EXTRA_GLOW: Record<string, string> = {
   'mvp':         '',
   'window-open': 'ring-2 ring-green-400/60 ring-offset-1 ring-offset-rag-bg',
@@ -60,7 +79,33 @@ function formatCountdown(ms: number): string {
   return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`
 }
 
-function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: number; name: string }) {
+// ─── Fallback: avatar com inicial do nome ─────────────────────────────────────
+function SpriteFallback({ name, difficulty }: { name: string; difficulty: string }) {
+  const initial = name.trim().charAt(0).toUpperCase()
+  const grad    = FALLBACK_GRADIENT[difficulty] ?? FALLBACK_GRADIENT.hard
+  const textCls = FALLBACK_TEXT[difficulty]     ?? FALLBACK_TEXT.hard
+  const ringCls = FALLBACK_RING[difficulty]      ?? FALLBACK_RING.hard
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
+      <div
+        className={cn(
+          'w-20 h-20 rounded-2xl ring-2 flex items-center justify-center',
+          'bg-gradient-to-br select-none',
+          grad, ringCls,
+        )}
+      >
+        <span className={cn('text-4xl font-black font-display tracking-tighter', textCls)}>
+          {initial}
+        </span>
+      </div>
+      <span className="text-[9px] text-rag-muted/50 font-mono tracking-widest uppercase">sem sprite</span>
+    </div>
+  )
+}
+
+// ─── Sprite com fallback ──────────────────────────────────────────────────────
+function MobSprite({ aegisName, mobId, name, difficulty }: { aegisName?: string; mobId: number; name: string; difficulty: string }) {
   const srcs = buildSrcList(aegisName, mobId)
   const [idx, setIdx]       = useState(0)
   const [failed, setFailed] = useState(srcs.length === 0)
@@ -72,11 +117,7 @@ function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: numb
   }, [mobId, aegisName])
 
   if (failed || srcs.length === 0) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <Skull size={64} className="text-rag-muted/30" />
-      </div>
-    )
+    return <SpriteFallback name={name} difficulty={difficulty} />
   }
 
   return (
@@ -125,13 +166,13 @@ export function MVPCard({
 
   if (!data) return null
 
-  const frame    = FRAME[data.difficulty] ?? FRAME.medium
-  const status   = data.status
-  const midMs    = data.minRespawnDate && data.maxRespawnDate
+  const frame      = FRAME[data.difficulty] ?? FRAME.medium
+  const status     = data.status
+  const midMs      = data.minRespawnDate && data.maxRespawnDate
     ? (data.minRespawnDate.getTime() + data.maxRespawnDate.getTime()) / 2
     : null
-  const timeLeft = midMs ? Math.max(0, midMs - now) : null
-  const dpUrl    = data.mobId > 0
+  const timeLeft   = midMs ? Math.max(0, midMs - now) : null
+  const dpUrl      = data.mobId > 0
     ? `https://db.divine-pride.net/database/monster/${data.mobId}`
     : null
   const statusInfo = STATUS_LABEL[status]
@@ -188,14 +229,19 @@ export function MVPCard({
           </div>
         </div>
 
-        {/* ARTE — sprite 160px, area h-44 */}
+        {/* ARTE */}
         <div className="relative flex items-center justify-center bg-gradient-to-b
                         from-[#080a14] to-[#0d1020] h-44 overflow-hidden">
           <div className="absolute inset-0 opacity-[0.04] select-none pointer-events-none
                           flex items-center justify-center text-6xl text-white">
             &#x16A0;&#x16B7;&#x16D2;&#x16A2;
           </div>
-          <MobSprite aegisName={data.aegisName} mobId={data.mobId} name={data.name} />
+          <MobSprite
+            aegisName={data.aegisName}
+            mobId={data.mobId}
+            name={data.name}
+            difficulty={data.difficulty}
+          />
         </div>
 
         {/* TYPE BAR */}
