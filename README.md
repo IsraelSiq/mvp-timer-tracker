@@ -4,7 +4,7 @@
 > Roda 100% na nuvem (Vercel + Supabase) — sem instalar nada no PC de jogo.
 
 [![License](https://img.shields.io/badge/license-MIT-blue)](#)
-[![Version](https://img.shields.io/badge/version-2.1.0-green)](#)
+[![Version](https://img.shields.io/badge/version-2.2.0-green)](#)
 [![MVPs](https://img.shields.io/badge/MVPs-99%2B-orange)](#-mvps-incluídos-99)
 
 > 🧪 Procurando o **Simulador de Skill Tree**? Ele foi movido para o repositório dedicado: [ro-skill-simulator](https://github.com/IsraelSiq/ro-skill-simulator)
@@ -17,6 +17,7 @@
 |---|---|
 | ⏱ **Timer duplo** | Janela mínima e máxima de respawn com countdown em tempo real |
 | 🟢 **Status visual** | Vivo / Longe / Em breve / Janela aberta / Passou da janela |
+| 🖼️ **Sprites animados** | GIF oficial kRO (gnjoy.com) com fallback automático para Divine Pride |
 | ⚔️ **Registro de kill** | Registra quem matou, horário e observações (requer login) |
 | ⚡ **Kill por inimigo** | Marca morte por guild rival com hora customizável (requer login) |
 | 📡 **Realtime** | Log compartilhado via Supabase Realtime — todos do grupo veem na hora |
@@ -31,6 +32,21 @@
 
 ---
 
+## 🖼️ Sprites animados (MobSprite)
+
+Cada MVP exibe seu sprite animado com cadeia de fallback automática:
+
+```
+1. GIF oficial kRO  → https://imgc1.gnjoy.com/.../Monster/{aegisName}.gif
+2. GIF Divine Pride → https://static.divine-pride.net/images/mobs/gif/{mobId}.gif
+3. PNG Divine Pride → https://static.divine-pride.net/images/mobs/png/{mobId}.png
+4. Ícone Skull      → fallback visual quando nenhuma fonte responde
+```
+
+O campo `aegisName` (ex: `AMON_RA`, `BAPHOMET`) está mapeado para todos os **49 MVPs kRO clássicos**. MVPs exclusivos do TrueMmo sem `aegisName` usam diretamente os fallbacks da Divine Pride.
+
+---
+
 ## 🎯 Modos de Objetivo
 
 | Emoji | Modo | Lógica de ordenação |
@@ -39,7 +55,7 @@
 | 🎯 | **Farmar MVP Points** | Easy first, solo, fast spawn, penaliza disputados |
 | 💎 | **Melhores Drops** | Tag `high-drop` + prioridade alta |
 | ⚡ | **Rotação Rápida** | Menor respawn primeiro |
-| 🛡️ | **Caçada em Grupo** | Tag `group` + `high-drop` |
+| 🤝 | **Caçada em Grupo** | Tag `group` + `high-drop` |
 
 ---
 
@@ -299,7 +315,8 @@ Vá em **Database → Replication** e ative a tabela `mvp_kills`.
 ```
 src/
 ├── components/
-│   ├── MVPCard.tsx          # Card individual do MVP com timer e ações
+│   ├── MVPCard.tsx          # Card do MVP — sprite animado (MobSprite) + timer + ações
+│   ├── MvpDetailsPanel.tsx  # Painel lateral com detalhes do MVP selecionado
 │   ├── KillModal.tsx        # Modal de registro de kill
 │   ├── KillLog.tsx          # Painel de log do grupo
 │   ├── AISuggestion.tsx     # Painel de sugestão Gemini
@@ -307,21 +324,21 @@ src/
 │   ├── AuthModal.tsx        # Modal de login (Google + e-mail/senha)
 │   └── GoalSelector.tsx     # Seletor de modo objetivo
 ├── data/
-│   ├── mvps.ts              # Lista de 99+ MVPs com respawn, prioridade, dificuldade e tags
-│   ├── mvpImages.ts         # URLs das imagens dos MVPs
-│   └── mapNames.ts          # Tradução dos IDs de mapa
+│   ├── mvps.ts              # 99+ MVPs com respawn, aegisName, prioridade, dificuldade e tags
+│   ├── mvpImages.ts         # URLs de imagem legadas (substituídas pelo MobSprite)
+│   └── mapNames.ts          # Tradução dos IDs de mapa para nomes em PT-BR
 ├── hooks/
 │   ├── useAuth.ts           # Autenticação (Google OAuth + e-mail/senha)
 │   ├── useKills.ts          # Estado de kills + sync Supabase
 │   ├── useNow.ts            # Tick a cada 1s para atualizar timers
-│   └── useTimers.ts         # Lógica de respawn
+│   └── useTimers.ts         # Lógica de respawn e enriquecimento de MVPs
 ├── lib/
 │   ├── supabase.ts          # Cliente Supabase
 │   └── gemini.ts            # Integração Gemini AI
 ├── pages/
 │   └── Dashboard.tsx        # Página principal
 ├── types/
-│   └── index.ts             # Interfaces TypeScript + GoalMode + MvpTag
+│   └── index.ts             # Interfaces TypeScript: MVP, EnrichedMVP, KillLog, GoalMode, MvpTag
 └── utils/
     ├── timer.ts             # Cálculos de respawn e status
     ├── respawn.ts           # Utilitários de respawn
@@ -329,6 +346,20 @@ src/
 supabase/
 └── policies.sql             # Políticas RLS prontas para aplicar
 ```
+
+---
+
+## 🏷️ Tags de MVP
+
+| Tag | Descrição |
+|---|---|
+| `solo` | Pode ser feito solo |
+| `group` | Recomendado ou exige grupo |
+| `high-drop` | Card / drop de alto valor |
+| `fast` | Respawn curto (≤ 1 h) |
+| `field` | Aparece em mapa aberto (field) |
+| `disputed` | Muito disputado no servidor |
+| `truemmo-exclusive` | Exclusivo do servidor TrueMmo |
 
 ---
 
