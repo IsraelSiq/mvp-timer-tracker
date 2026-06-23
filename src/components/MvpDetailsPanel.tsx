@@ -38,6 +38,22 @@ const DIFFICULTY_LABEL: Record<string, string> = {
   easy: 'Fácil', medium: 'Médio', hard: 'Difícil',
 }
 
+const KRO_BASE = 'https://imgc1.gnjoy.com/games/ro1/object/201310/job/Monster'
+const DP_GIF_BASE = 'https://static.divine-pride.net/images/mobs/gif'
+const DP_PNG_BASE = 'https://static.divine-pride.net/images/mobs/png'
+
+function buildSrcList(aegisName?: string, mobId?: number, pngUrl?: string): string[] {
+  const srcs: string[] = []
+  if (aegisName)  srcs.push(`${KRO_BASE}/${aegisName}.gif`)
+  if (mobId && mobId > 0) {
+    srcs.push(`${DP_GIF_BASE}/${mobId}.gif`)
+    srcs.push(pngUrl ?? `${DP_PNG_BASE}/${mobId}.png`)
+  } else if (pngUrl) {
+    srcs.push(pngUrl)
+  }
+  return srcs
+}
+
 function ElementBadge({ name }: { name: string }) {
   const cls = ELEMENT_COLORS[name] ?? 'text-rag-muted bg-rag-bg border-rag-border'
   return (
@@ -47,21 +63,17 @@ function ElementBadge({ name }: { name: string }) {
   )
 }
 
-function MobImage({ mobId, name, pngUrl }: { mobId: number; name: string; pngUrl?: string }) {
-  const gifUrl = mobId > 0
-    ? `https://static.divine-pride.net/images/mobs/gif/${mobId}.gif`
-    : null
-  const fallbackUrl = pngUrl ?? (mobId > 0 ? `https://static.divine-pride.net/images/mobs/png/${mobId}.png` : null)
-
-  const [src, setSrc] = useState<string | null>(gifUrl ?? fallbackUrl)
-  const [failed, setFailed] = useState(false)
+function MobImage({ aegisName, mobId, name, pngUrl }: { aegisName?: string; mobId: number; name: string; pngUrl?: string }) {
+  const srcs = buildSrcList(aegisName, mobId, pngUrl)
+  const [idx, setIdx] = useState(0)
+  const [failed, setFailed] = useState(srcs.length === 0)
 
   useEffect(() => {
-    setSrc(gifUrl ?? fallbackUrl)
-    setFailed(false)
-  }, [mobId])
+    setIdx(0)
+    setFailed(srcs.length === 0)
+  }, [mobId, aegisName])
 
-  if (!src || failed) {
+  if (failed || srcs.length === 0) {
     return (
       <div className="flex items-center justify-center w-20 h-20 rounded-xl bg-rag-bg border border-rag-border shrink-0">
         <Skull size={32} className="text-rag-muted/30" />
@@ -71,7 +83,8 @@ function MobImage({ mobId, name, pngUrl }: { mobId: number; name: string; pngUrl
 
   return (
     <img
-      src={src}
+      key={srcs[idx]}
+      src={srcs[idx]}
       alt={name}
       width={80}
       height={80}
@@ -79,8 +92,8 @@ function MobImage({ mobId, name, pngUrl }: { mobId: number; name: string; pngUrl
       style={{ imageRendering: 'pixelated' }}
       loading="lazy"
       onError={() => {
-        if (src === gifUrl && fallbackUrl) {
-          setSrc(fallbackUrl)
+        if (idx + 1 < srcs.length) {
+          setIdx(idx + 1)
         } else {
           setFailed(true)
         }
@@ -120,7 +133,7 @@ export function MvpDetailsPanel({ item, onClose, onRegisterKill }: Props) {
       >
         {/* Header com imagem */}
         <div className="flex items-center gap-4 px-5 py-4 border-b border-rag-border">
-          <MobImage mobId={item.mobId} name={item.name} pngUrl={item.image} />
+          <MobImage aegisName={item.aegisName} mobId={item.mobId} name={item.name} pngUrl={item.image} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="font-body font-bold text-rag-text text-base leading-tight">{item.name}</h2>
@@ -193,49 +206,28 @@ export function MvpDetailsPanel({ item, onClose, onRegisterKill }: Props) {
               </div>
 
               {/* Resistências */}
-              <div className="bg-rag-bg border border-red-700/30 rounded-lg p-3">
-                <p className="text-xs font-semibold text-red-400 mb-2">✕ Resiste a</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {res.resistTo.map(e => <ElementBadge key={e} name={e} />)}
-                </div>
-              </div>
-
-              {/* Dica */}
-              {res.tips && (
-                <div className="bg-rag-accent/10 border border-rag-accent/30 rounded-lg px-3 py-2">
-                  <p className="text-rag-accent text-xs">💡 {res.tips}</p>
+              {res.resistTo?.length > 0 && (
+                <div className="bg-rag-bg border border-red-700/30 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-red-400 mb-2">✕ Resiste a</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {res.resistTo.map(e => <ElementBadge key={e} name={e} />)}
+                  </div>
                 </div>
               )}
             </>
           )}
 
-          {/* Ações */}
-          <div className="flex gap-2 pt-1">
-            {onRegisterKill && (
-              <button
-                onClick={() => { onRegisterKill(item.id); onClose() }}
-                className="flex-1 flex items-center justify-center gap-2 bg-rag-accent hover:bg-rag-accent/80 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
-              >
-                <Swords size={15} />
-                Registrar Kill
-              </button>
-            )}
-            <a
-              href={`https://www.divine-pride.net/database/monster/${item.mobId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center text-xs text-rag-muted hover:text-rag-text border border-rag-border hover:border-rag-text/30 rounded-xl py-2.5 transition-colors"
+          {/* Botão registrar kill */}
+          {onRegisterKill && (
+            <button
+              onClick={() => { onRegisterKill(item.id); onClose() }}
+              className="w-full py-2.5 rounded-xl bg-rag-accent hover:bg-rag-accent/80 text-white font-bold text-sm transition-colors"
             >
-              Divine Pride ↗
-            </a>
-          </div>
+              ⚔️ Registrar Kill
+            </button>
+          )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(24px) scale(0.97) } to { opacity: 1; transform: translateY(0) scale(1) } }
-      `}</style>
     </div>
   )
 }

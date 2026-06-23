@@ -1,6 +1,7 @@
 export interface MVP {
   id: number
   mobId: number      // mob ID no banco do RO (usado para imagem e referencia)
+  aegisName?: string // nome interno do mob no KRO (ex: AMON_RA) — usado para GIF oficial gnjoy.com
   name: string
   map: string
   minRespawn: number // minutes
