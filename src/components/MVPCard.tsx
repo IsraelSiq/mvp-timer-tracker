@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Clock, MapPin, Star, ExternalLink, Skull } from 'lucide-react'
-import type { EnrichedMVP } from '@/types'
+import type { EnrichedMVP, KillLog } from '@/types'
 import { cn } from '@/lib/utils'
 
 const KRO_BASE = 'https://imgc1.gnjoy.com/games/ro1/object/201310/job/Monster'
@@ -56,10 +56,21 @@ function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: numb
   )
 }
 
-interface MVPCardProps {
+export interface MVPCardProps {
+  /** Suporte a ambos os nomes de prop para retrocompatibilidade */
   item?: EnrichedMVP
   mvp?: EnrichedMVP
+  /** Timestamp atual em ms — passado pelo Dashboard para evitar N timers internos */
+  now?: number
+  /** Callback ao clicar em "Kill" (passa o MVP completo) */
+  onKill?: (item: EnrichedMVP) => void
+  /** Callback ao marcar kill inimiga (passa MVP + killedAt ISO string) */
+  onEnemyKill?: (item: EnrichedMVP, killedAt: string) => void
+  /** Nome do jogador atual (para log de kill) */
+  player?: string
+  /** Retrocompat: callback simples com id */
   onRegisterKill?: (id: number) => void
+  /** Retrocompat: callback de seleção */
   onSelect?: (item: EnrichedMVP) => void
 }
 
@@ -68,20 +79,6 @@ const STATUS_STYLES = {
   'window-open': 'border-green-500/60 bg-green-900/10',
   'soon':        'border-yellow-500/50 bg-yellow-900/10',
   'far':         'border-rag-border bg-rag-surface',
-}
-
-const ELEMENT_BADGE: Record<string, string> = {
-  'Sagrado':    'text-yellow-300 bg-yellow-900/20 border-yellow-700/40',
-  'Sombra':     'text-purple-400 bg-purple-900/20 border-purple-700/40',
-  'Fogo':       'text-red-400    bg-red-900/20    border-red-700/40',
-  'Água':       'text-blue-400   bg-blue-900/20   border-blue-700/40',
-  'Vento':      'text-green-300  bg-green-900/20  border-green-700/40',
-  'Terra':      'text-amber-400  bg-amber-900/20  border-amber-700/40',
-  'Neutro':     'text-gray-300   bg-gray-800/40   border-gray-600/40',
-  'Veneno':     'text-lime-400   bg-lime-900/20   border-lime-700/40',
-  'Morto-vivo': 'text-rose-400   bg-rose-900/20   border-rose-700/40',
-  'Fantasma':   'text-indigo-300 bg-indigo-900/20 border-indigo-700/40',
-  'Elétrico':   'text-cyan-300   bg-cyan-900/20   border-cyan-700/40',
 }
 
 const DIFFICULTY_STYLE: Record<string, string> = {
@@ -102,15 +99,18 @@ function formatCountdown(ms: number): string {
   return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`
 }
 
-export function MVPCard({ item, mvp, onRegisterKill, onSelect }: MVPCardProps) {
+export function MVPCard({ item, mvp, now: nowProp, onKill, onEnemyKill, onRegisterKill, onSelect }: MVPCardProps) {
   const data = item ?? mvp
   if (!data) return null
 
-  const [now, setNow] = useState(Date.now())
+  // Se `now` não for passado pelo pai, mantém timer interno (retrocompat)
+  const [internalNow, setInternalNow] = useState(Date.now())
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000)
+    if (nowProp !== undefined) return
+    const t = setInterval(() => setInternalNow(Date.now()), 1000)
     return () => clearInterval(t)
-  }, [])
+  }, [nowProp])
+  const now = nowProp ?? internalNow
 
   const status = data.status
   const midMs = data.minRespawnDate && data.maxRespawnDate
@@ -121,6 +121,17 @@ export function MVPCard({ item, mvp, onRegisterKill, onSelect }: MVPCardProps) {
   const dpUrl = data.mobId > 0
     ? `https://db.divine-pride.net/database/monster/${data.mobId}`
     : null
+
+  function handleKill(e: React.MouseEvent) {
+    e.stopPropagation()
+    onKill?.(data)
+    onRegisterKill?.(data.id)
+  }
+
+  function handleEnemyKill(e: React.MouseEvent) {
+    e.stopPropagation()
+    onEnemyKill?.(data, new Date().toISOString())
+  }
 
   return (
     <div
@@ -162,18 +173,27 @@ export function MVPCard({ item, mvp, onRegisterKill, onSelect }: MVPCardProps) {
               <ExternalLink size={12} />
             </a>
           )}
-          {onRegisterKill && (
+          {(onKill || onRegisterKill) && (
             <button
-              onClick={e => { e.stopPropagation(); onRegisterKill(data.id) }}
+              onClick={handleKill}
               className="px-2 py-1 rounded-lg bg-rag-accent/10 hover:bg-rag-accent/20 text-rag-accent text-xs font-semibold transition-colors"
             >
               Kill
             </button>
           )}
+          {onEnemyKill && (
+            <button
+              onClick={handleEnemyKill}
+              className="px-2 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition-colors"
+              title="Marcar como morto por inimigo"
+            >
+              💀
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Row 2: stats de combate inline */}
+      {/* Row 2: pontos + timer */}
       {data.mvpPoints != null && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="flex items-center gap-1 text-rag-accent text-xs font-semibold">
