@@ -205,9 +205,7 @@ export function Dashboard() {
       </div>
 
       {mainTab === 'mvp' ? (
-        /* Layout de duas colunas: conteúdo principal + sidebar de log */
         <div className="flex items-start">
-          {/* Conteúdo principal */}
           <main className="flex-1 min-w-0 px-4 py-6 space-y-6">
             {/* Settings row */}
             <div className="flex flex-wrap gap-3 items-end">
@@ -310,7 +308,7 @@ export function Dashboard() {
             {/* Goal selector */}
             <GoalSelector value={goalMode} onChange={setGoalMode} topTarget={topTarget} />
 
-            {/* MVP Grid — 5 colunas a partir de xl */}
+            {/* MVP Grid — 6 colunas a partir de xl */}
             {filtered.length === 0 ? (
               <div className="text-center py-16 text-rag-muted">
                 <p className="text-4xl mb-3">🏆</p>
@@ -318,7 +316,7 @@ export function Dashboard() {
                 <p className="text-xs mt-1 text-rag-faint">Tente outro status ou limpe a busca.</p>
               </div>
             ) : (
-              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-6">
                 {filtered.map(mvp => (
                   <MVPCard
                     key={mvp.id}

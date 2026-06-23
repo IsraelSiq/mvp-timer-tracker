@@ -17,7 +17,6 @@ function buildSrcList(aegisName?: string, mobId?: number): string[] {
   return srcs
 }
 
-// ─── Paleta de frames por dificuldade (inspired by Magic rarities) ───────────
 const FRAME: Record<string, { border: string; glow: string; typebar: string; label: string }> = {
   easy: {
     border:  'from-emerald-400 via-emerald-600 to-emerald-400',
@@ -39,7 +38,6 @@ const FRAME: Record<string, { border: string; glow: string; typebar: string; lab
   },
 }
 
-// Status adiciona brilho extra na borda quando janela aberta
 const STATUS_EXTRA_GLOW: Record<string, string> = {
   'mvp':         '',
   'window-open': 'ring-2 ring-green-400/60 ring-offset-1 ring-offset-rag-bg',
@@ -62,7 +60,6 @@ function formatCountdown(ms: number): string {
   return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`
 }
 
-// ─── Sprite com fallback ──────────────────────────────────────────────────────
 function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: number; name: string }) {
   const srcs = buildSrcList(aegisName, mobId)
   const [idx, setIdx]       = useState(0)
@@ -77,7 +74,7 @@ function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: numb
   if (failed || srcs.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <Skull size={56} className="text-rag-muted/30" />
+        <Skull size={64} className="text-rag-muted/30" />
       </div>
     )
   }
@@ -87,10 +84,10 @@ function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: numb
       key={srcs[idx]}
       src={srcs[idx]}
       alt={name}
-      width={128}
-      height={128}
+      width={160}
+      height={160}
       loading="lazy"
-      className="w-32 h-32 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
+      className="w-40 h-40 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
       style={{ imageRendering: 'pixelated' }}
       onError={() => {
         if (idx + 1 < srcs.length) setIdx(i => i + 1)
@@ -100,7 +97,6 @@ function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: numb
   )
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 export interface MVPCardProps {
   item?:           EnrichedMVP
   mvp?:            EnrichedMVP
@@ -112,7 +108,6 @@ export interface MVPCardProps {
   onSelect?:       (item: EnrichedMVP) => void
 }
 
-// ─── Card ─────────────────────────────────────────────────────────────────────
 export function MVPCard({
   item, mvp, now: nowProp,
   onKill, onEnemyKill,
@@ -153,7 +148,6 @@ export function MVPCard({
   }
 
   return (
-    // Camada externa: gradiente de borda (trick: p-[2px] + bg interno)
     <div
       className={cn(
         'p-[2px] rounded-2xl bg-gradient-to-b cursor-pointer transition-all duration-200',
@@ -164,10 +158,9 @@ export function MVPCard({
       )}
       onClick={() => onSelect?.(data!)}
     >
-      {/* Card interno */}
       <div className="rounded-2xl bg-[#0f1020] overflow-hidden flex flex-col">
 
-        {/* ── HEADER: nome + pts + link ─────────────────────────────────── */}
+        {/* HEADER */}
         <div className="px-3 pt-2.5 pb-1.5 flex items-center justify-between gap-2
                         bg-gradient-to-r from-[#1a1d30] to-[#12142a]
                         border-b border-white/5">
@@ -195,10 +188,9 @@ export function MVPCard({
           </div>
         </div>
 
-        {/* ── ARTE: sprite centralizado em fundo escuro ─────────────────── */}
+        {/* ARTE — sprite 160px, area h-44 */}
         <div className="relative flex items-center justify-center bg-gradient-to-b
-                        from-[#080a14] to-[#0d1020] h-36 overflow-hidden">
-          {/* runas decorativas de fundo */}
+                        from-[#080a14] to-[#0d1020] h-44 overflow-hidden">
           <div className="absolute inset-0 opacity-[0.04] select-none pointer-events-none
                           flex items-center justify-center text-6xl text-white">
             &#x16A0;&#x16B7;&#x16D2;&#x16A2;
@@ -206,7 +198,7 @@ export function MVPCard({
           <MobSprite aegisName={data.aegisName} mobId={data.mobId} name={data.name} />
         </div>
 
-        {/* ── TYPE BAR: dificuldade estilo "Legendary Creature" ─────────── */}
+        {/* TYPE BAR */}
         <div className={cn(
           'px-3 py-1 flex items-center justify-between',
           'bg-gradient-to-r text-[10px] font-semibold',
@@ -220,7 +212,7 @@ export function MVPCard({
           </div>
         </div>
 
-        {/* ── TEXT BOX: status + timer ──────────────────────────────────── */}
+        {/* TEXT BOX */}
         <div className="px-3 py-2 bg-[#0c0e1c] flex flex-col gap-1 min-h-[52px]">
           <p className={cn('text-[11px] font-semibold', statusInfo.color)}>
             {statusInfo.text}
@@ -234,7 +226,7 @@ export function MVPCard({
           <p className="text-[10px] text-rag-muted/50 font-mono mt-0.5">#{data.mobId}</p>
         </div>
 
-        {/* ── FOOTER: ações + respawn range ──────────────────────────────── */}
+        {/* FOOTER */}
         <div className="px-2.5 pb-2.5 pt-1.5 flex items-center justify-between gap-2
                         bg-gradient-to-r from-[#0e1022] to-[#0c0f20]
                         border-t border-white/5">
@@ -264,8 +256,6 @@ export function MVPCard({
               </button>
             )}
           </div>
-
-          {/* Respawn range estilo P/T no canto */}
           <div className="flex items-center gap-1 text-[10px] font-mono
                           text-rag-muted/70 border border-white/10
                           rounded px-1.5 py-0.5 bg-black/30">
