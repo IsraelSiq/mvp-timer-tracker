@@ -17,16 +17,6 @@ function buildSrcList(aegisName?: string, mobId?: number): string[] {
   return srcs
 }
 
-// Estilo aplicado em todos os sprites para remover fundo branco no dark mode:
-//   mix-blend-mode: darken  → o pixel mais escuro "vence"; branco some no bg escuro
-//   filter: drop-shadow     → glow no contorno real do sprite (não no bounding box)
-//   image-rendering: pixelated → preserva o pixel art sem blur
-const SPRITE_STYLE: React.CSSProperties = {
-  mixBlendMode: 'darken',
-  imageRendering: 'pixelated',
-  filter: 'drop-shadow(0 0 6px rgba(100, 200, 255, 0.3))',
-}
-
 function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: number; name: string }) {
   const srcs = buildSrcList(aegisName, mobId)
   const [idx, setIdx]       = useState(0)
@@ -40,27 +30,29 @@ function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: numb
 
   if (failed || srcs.length === 0) {
     return (
-      <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-rag-bg border border-rag-border shrink-0">
-        <Skull size={20} className="text-rag-muted/40" />
+      <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-rag-bg border-2 border-rag-border shrink-0">
+        <Skull size={22} className="text-rag-muted/40" />
       </div>
     )
   }
 
   return (
-    <img
-      key={srcs[idx]}
-      src={srcs[idx]}
-      alt={name}
-      width={48}
-      height={48}
-      loading="lazy"
-      className="w-12 h-12 object-contain shrink-0"
-      style={SPRITE_STYLE}
-      onError={() => {
-        if (idx + 1 < srcs.length) setIdx(i => i + 1)
-        else setFailed(true)
-      }}
-    />
+    <div className="w-14 h-14 shrink-0 rounded-xl border-2 border-white/20 bg-white/10 overflow-hidden flex items-center justify-center p-0.5">
+      <img
+        key={srcs[idx]}
+        src={srcs[idx]}
+        alt={name}
+        width={52}
+        height={52}
+        loading="lazy"
+        className="w-full h-full object-contain"
+        style={{ imageRendering: 'pixelated' }}
+        onError={() => {
+          if (idx + 1 < srcs.length) setIdx(i => i + 1)
+          else setFailed(true)
+        }}
+      />
+    </div>
   )
 }
 
@@ -107,7 +99,6 @@ export function MVPCard({
 }: MVPCardProps) {
   const data = item ?? mvp
 
-  // Se `now` não for passado pelo pai, mantém timer interno (retrocompat)
   const [internalNow, setInternalNow] = useState(Date.now())
   useEffect(() => {
     if (nowProp !== undefined) return
@@ -116,7 +107,6 @@ export function MVPCard({
   }, [nowProp])
   const now = nowProp ?? internalNow
 
-  // Guard: early-return após todos os hooks
   if (!data) return null
 
   const status = data.status
