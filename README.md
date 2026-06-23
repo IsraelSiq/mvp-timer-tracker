@@ -315,36 +315,38 @@ Vá em **Database → Replication** e ative a tabela `mvp_kills`.
 ```
 src/
 ├── components/
-│   ├── MVPCard.tsx          # Card do MVP — sprite animado (MobSprite) + timer + ações
-│   ├── MvpDetailsPanel.tsx  # Painel lateral com detalhes do MVP selecionado
-│   ├── KillModal.tsx        # Modal de registro de kill
-│   ├── KillLog.tsx          # Painel de log do grupo
-│   ├── AISuggestion.tsx     # Painel de sugestão Gemini
-│   ├── StatusBadge.tsx      # Badge de status (Vivo/Longe/Janela/etc)
-│   ├── AuthModal.tsx        # Modal de login (Google + e-mail/senha)
-│   └── GoalSelector.tsx     # Seletor de modo objetivo
+│   ├── MVPCard.tsx            # Card do MVP — sprite animado (MobSprite) + timer + ações
+│   ├── MvpDetailsPanel.tsx    # Painel lateral com detalhes completos do MVP selecionado
+│   ├── KillModal.tsx          # Modal de registro de kill
+│   ├── KillLog.tsx            # Painel de log do grupo
+│   ├── AISuggestion.tsx       # Painel de sugestão Gemini
+│   ├── StatusBadge.tsx        # Badge de status (Vivo / Longe / Janela / etc)
+│   ├── AuthModal.tsx          # Modal de login (Google + e-mail/senha)
+│   ├── GoalSelector.tsx       # Seletor de modo objetivo
+│   ├── SkillChangesPanel.tsx  # Painel de mudanças de skill (legado — migrado para ro-skill-simulator)
+│   └── SkillSimulator/        # Componentes do simulador de skill (legado — migrado para ro-skill-simulator)
 ├── data/
-│   ├── mvps.ts              # 99+ MVPs com respawn, aegisName, prioridade, dificuldade e tags
-│   ├── mvpImages.ts         # URLs de imagem legadas (substituídas pelo MobSprite)
-│   └── mapNames.ts          # Tradução dos IDs de mapa para nomes em PT-BR
+│   ├── mvps.ts                # 99+ MVPs com respawn, aegisName, prioridade, dificuldade e tags
+│   ├── mvpImages.ts           # URLs de imagem legadas (substituídas pelo MobSprite)
+│   └── mapNames.ts            # Tradução dos IDs de mapa para nomes em PT-BR
 ├── hooks/
-│   ├── useAuth.ts           # Autenticação (Google OAuth + e-mail/senha)
-│   ├── useKills.ts          # Estado de kills + sync Supabase
-│   ├── useNow.ts            # Tick a cada 1s para atualizar timers
-│   └── useTimers.ts         # Lógica de respawn e enriquecimento de MVPs
+│   ├── useAuth.ts             # Autenticação (Google OAuth + e-mail/senha)
+│   ├── useKills.ts            # Estado de kills + sync Supabase
+│   ├── useNow.ts              # Tick a cada 1 s para atualizar timers
+│   └── useTimers.ts           # Lógica de respawn e enriquecimento de MVPs
 ├── lib/
-│   ├── supabase.ts          # Cliente Supabase
-│   └── gemini.ts            # Integração Gemini AI
+│   ├── supabase.ts            # Cliente Supabase
+│   └── gemini.ts              # Integração Gemini AI
 ├── pages/
-│   └── Dashboard.tsx        # Página principal
+│   └── Dashboard.tsx          # Página principal
 ├── types/
-│   └── index.ts             # Interfaces TypeScript: MVP, EnrichedMVP, KillLog, GoalMode, MvpTag
+│   └── index.ts               # Interfaces TypeScript: MVP, EnrichedMVP, KillLog, GoalMode, MvpTag
 └── utils/
-    ├── timer.ts             # Cálculos de respawn e status
-    ├── respawn.ts           # Utilitários de respawn
-    └── goalSort.ts          # Lógica de scoring por modo objetivo
+    ├── timer.ts               # Cálculos de respawn e status
+    ├── respawn.ts             # Utilitários de respawn
+    └── goalSort.ts            # Lógica de scoring por modo objetivo
 supabase/
-└── policies.sql             # Políticas RLS prontas para aplicar
+└── policies.sql               # Políticas RLS prontas para aplicar
 ```
 
 ---
