@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Swords, Skull, MapPin, ChevronDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Swords, Skull, ExternalLink } from 'lucide-react'
 import type { EnrichedMVP } from '@/types'
 import { StatusBadge } from './StatusBadge'
 import { MvpDetailsPanel } from './MvpDetailsPanel'
 import { formatRemaining, formatDateTime } from '@/utils/timer'
 import { getMapName } from '@/data/mapNames'
+import { MVP_RESISTANCES } from '@/data/mvpResistances'
 
 interface Props {
   item?: EnrichedMVP
@@ -21,13 +22,69 @@ const DIFFICULTY_LABEL = {
   hard:   { label: 'Difícil', className: 'text-red-400    border-red-700/40    bg-red-900/20'    },
 }
 
-const TAG_LABEL: Record<string, string> = {
-  solo:        '👤 Solo',
-  group:       '👥 Grupo',
-  'high-drop': '💎 Drop',
-  fast:        '⚡ Rápido',
-  field:       '🌿 Field',
-  disputed:    '🔥 Disputado',
+const ELEMENT_COLORS: Record<string, string> = {
+  'Sagrado':    'text-yellow-300 bg-yellow-900/20 border-yellow-700/40',
+  'Sombra':     'text-purple-400 bg-purple-900/20 border-purple-700/40',
+  'Fogo':       'text-red-400    bg-red-900/20    border-red-700/40',
+  'Água':       'text-blue-400   bg-blue-900/20   border-blue-700/40',
+  'Vento':      'text-green-300  bg-green-900/20  border-green-700/40',
+  'Terra':      'text-amber-400  bg-amber-900/20  border-amber-700/40',
+  'Neutro':     'text-gray-300   bg-gray-800/40   border-gray-600/40',
+  'Veneno':     'text-lime-400   bg-lime-900/20   border-lime-700/40',
+  'Morto-vivo': 'text-rose-400   bg-rose-900/20   border-rose-700/40',
+  'Fantasma':   'text-indigo-300 bg-indigo-900/20 border-indigo-700/40',
+  'Elétrico':   'text-cyan-300   bg-cyan-900/20   border-cyan-700/40',
+}
+
+function ElementBadge({ name }: { name: string }) {
+  const cls = ELEMENT_COLORS[name] ?? 'text-rag-muted bg-rag-bg border-rag-border'
+  return (
+    <span className={`text-xs px-1.5 py-0.5 rounded-full border font-semibold ${cls}`}>
+      {name}
+    </span>
+  )
+}
+
+function MobSprite({ mobId, name, pngUrl }: { mobId: number; name: string; pngUrl?: string }) {
+  const gifUrl = mobId > 0
+    ? `https://static.divine-pride.net/images/mobs/gif/${mobId}.gif`
+    : null
+  const fallbackUrl = pngUrl ?? (mobId > 0 ? `https://static.divine-pride.net/images/mobs/png/${mobId}.png` : null)
+
+  const [src, setSrc] = useState<string | null>(gifUrl ?? fallbackUrl)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    setSrc(gifUrl ?? fallbackUrl)
+    setFailed(false)
+  }, [mobId])
+
+  if (!src || failed) {
+    return (
+      <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-rag-bg border border-rag-border shrink-0">
+        <Skull size={20} className="text-rag-muted/30" />
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={src}
+      alt={name}
+      width={48}
+      height={48}
+      className="w-12 h-12 object-contain rounded-lg bg-rag-bg border border-rag-border shrink-0"
+      style={{ imageRendering: 'pixelated' }}
+      loading="lazy"
+      onError={() => {
+        if (src === gifUrl && fallbackUrl) {
+          setSrc(fallbackUrl)
+        } else {
+          setFailed(true)
+        }
+      }}
+    />
+  )
 }
 
 function toLocalDatetimeInput(date: Date): string {
@@ -44,6 +101,7 @@ export function MVPCard({ item: itemProp, mvp, now, onKill, onEnemyKill }: Props
   const minRemaining = item.minRespawnDate ? item.minRespawnDate.getTime() - now : 0
   const maxRemaining = item.maxRespawnDate ? item.maxRespawnDate.getTime() - now : 0
   const diff = DIFFICULTY_LABEL[item.difficulty]
+  const res  = MVP_RESISTANCES[item.mobId]
 
   const [showEnemyForm, setShowEnemyForm] = useState(false)
   const [enemyTime,     setEnemyTime]     = useState(() => toLocalDatetimeInput(new Date()))
@@ -55,57 +113,60 @@ export function MVPCard({ item: itemProp, mvp, now, onKill, onEnemyKill }: Props
   }
 
   const noRecord = item.status === 'mvp'
+  const mapName  = getMapName(item.map)
 
   return (
     <>
       <article className="bg-rag-surface border border-rag-border rounded-xl overflow-hidden flex flex-col hover:border-rag-accent/50 transition-colors">
 
-        {/* Banner imagem */}
-        <div className="relative bg-rag-bg border-b border-rag-border flex items-center justify-center h-24 overflow-hidden">
-          {item.image ? (
-            <img
-              src={item.image}
-              alt={item.name}
-              className="h-20 w-auto object-contain drop-shadow-lg"
-              style={{ imageRendering: 'pixelated' }}
-              loading="lazy"
-              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-            />
-          ) : (
-            <Skull size={40} className="text-rag-muted/30" />
-          )}
-          <div className="absolute top-2 right-2">
-            <StatusBadge status={item.status} />
-          </div>
-          <div className="absolute top-2 left-2">
-            <span className={`text-xs px-1.5 py-0.5 rounded border ${diff.className}`}>
-              {diff.label}
-            </span>
+        {/* Header: sprite + identidade + status */}
+        <div className="p-3 flex items-start gap-3">
+          <MobSprite mobId={item.mobId} name={item.name} pngUrl={item.image} />
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="font-body font-semibold text-rag-text text-sm leading-tight truncate">
+                  {item.name}
+                </h3>
+                <p className="text-rag-muted text-xs mt-0.5">
+                  Mob #{item.mobId > 0 ? item.mobId : '—'}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className={`text-xs px-1.5 py-0.5 rounded border whitespace-nowrap ${diff.className}`}>
+                  {diff.label}
+                </span>
+                <StatusBadge status={item.status} />
+              </div>
+            </div>
+
+            {/* Mapa */}
+            <p className="text-rag-blue text-xs font-medium mt-1 truncate">
+              {mapName}
+            </p>
+            <p className="text-rag-muted/60 text-xs truncate">
+              ({item.map}) · {item.minRespawn}–{item.maxRespawn} min
+            </p>
           </div>
         </div>
 
-        <div className="p-4 flex flex-col gap-3">
-          <div>
-            <h3 className="font-body font-semibold text-rag-text text-base leading-tight">{item.name}</h3>
-            <span className="flex items-center gap-1 text-rag-blue text-xs font-medium mt-0.5">
-              <MapPin size={11} className="shrink-0" />
-              {getMapName(item.map)}
-            </span>
-            <span className="text-rag-muted text-xs">
-              <span className="opacity-50">{item.map}</span>
-              {' • '}
-              {item.minRespawn}–{item.maxRespawn} min
-            </span>
-          </div>
+        <div className="px-3 pb-3 flex flex-col gap-2">
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1">
-            {item.tags.map(tag => (
-              <span key={tag} className="text-xs px-1.5 py-0.5 rounded-full border border-rag-border bg-rag-bg text-rag-muted">
-                {TAG_LABEL[tag] ?? tag}
-              </span>
-            ))}
-          </div>
+          {/* Stats de combate */}
+          {res && (
+            <div className="bg-rag-bg border border-rag-border rounded-lg px-2.5 py-2 flex flex-col gap-1.5">
+              <p className="text-rag-muted text-xs">
+                {res.size} · {res.race} · <ElementBadge name={res.element} />
+              </p>
+              {res.weakTo.length > 0 && (
+                <p className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-green-400 text-xs font-semibold">★ Fraco contra</span>
+                  {res.weakTo.map(e => <ElementBadge key={e} name={e} />)}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Timers */}
           {!noRecord && (
@@ -140,12 +201,13 @@ export function MVPCard({ item: itemProp, mvp, now, onKill, onEnemyKill }: Props
                   width: `${item.windowProgress}%`,
                   background: item.status === 'window-open'
                     ? 'linear-gradient(90deg, #27ae60, #f1c40f)'
-                    : 'linear-gradient(90deg, #2980b9, #c0392b)'
+                    : 'linear-gradient(90deg, #2980b9, #c0392b)',
                 }}
               />
             </div>
           )}
 
+          {/* Última kill */}
           <p className="text-rag-muted text-xs">
             {item.latest
               ? <>{item.latest.killed_by_enemy
@@ -155,17 +217,7 @@ export function MVPCard({ item: itemProp, mvp, now, onKill, onEnemyKill }: Props
               : 'Nenhuma kill registrada.'}
           </p>
 
-          <p className="text-rag-muted/70 text-xs italic">{item.notes}</p>
-
-          {/* Botão Divine Pride */}
-          <button
-            onClick={() => setShowDPDetails(true)}
-            className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg border border-rag-border bg-rag-bg hover:border-rag-accent/40 hover:text-rag-text text-rag-muted text-xs transition-colors"
-          >
-            <ChevronDown size={12} />
-            Ver drops e stats (Divine Pride)
-          </button>
-
+          {/* Formulário inimigo */}
           {showEnemyForm && (
             <div className="flex flex-col gap-2 bg-rag-bg border border-rag-border rounded-lg p-3">
               <label className="text-rag-muted text-xs">Hora que o inimigo matou:</label>
@@ -192,19 +244,27 @@ export function MVPCard({ item: itemProp, mvp, now, onKill, onEnemyKill }: Props
             </div>
           )}
 
+          {/* Actions */}
           <div className="flex gap-2">
             <button
               onClick={() => onKill(item)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-rag-accent hover:bg-red-700 text-white font-semibold text-sm transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-rag-accent hover:bg-red-700 text-white font-semibold text-xs transition-colors"
             >
               <Swords size={13} /> Nós matamos
             </button>
             <button
               onClick={() => { setShowEnemyForm(v => !v); setEnemyTime(toLocalDatetimeInput(new Date())) }}
               title="Registrar morte por inimigo"
-              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange-900/40 hover:bg-orange-800/60 border border-orange-700/40 text-orange-400 text-sm transition-colors"
+              className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-orange-900/40 hover:bg-orange-800/60 border border-orange-700/40 text-orange-400 text-xs transition-colors"
             >
               <Skull size={13} /> Inimigo
+            </button>
+            <button
+              onClick={() => setShowDPDetails(true)}
+              title="Ver no Divine Pride"
+              className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg border border-rag-border bg-rag-bg hover:border-rag-accent/40 hover:text-rag-text text-rag-muted text-xs transition-colors"
+            >
+              <ExternalLink size={12} /> DP
             </button>
           </div>
         </div>
