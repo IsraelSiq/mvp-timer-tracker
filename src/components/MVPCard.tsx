@@ -7,13 +7,15 @@ const KRO_BASE    = 'https://imgc1.gnjoy.com/games/ro1/object/201310/job/Monster
 const DP_GIF_BASE = 'https://static.divine-pride.net/images/mobs/gif'
 const DP_PNG_BASE = 'https://static.divine-pride.net/images/mobs/png'
 
+// Ordem: DP GIF → DP PNG → kRO GIF
+// Divine Pride tem cobertura completa para todos os MVPs clássicos
 function buildSrcList(aegisName?: string, mobId?: number): string[] {
   const srcs: string[] = []
-  if (aegisName)          srcs.push(`${KRO_BASE}/${aegisName}.gif`)
   if (mobId && mobId > 0) {
     srcs.push(`${DP_GIF_BASE}/${mobId}.gif`)
     srcs.push(`${DP_PNG_BASE}/${mobId}.png`)
   }
+  if (aegisName) srcs.push(`${KRO_BASE}/${aegisName}.gif`)
   return srcs
 }
 
@@ -38,7 +40,6 @@ const FRAME: Record<string, { border: string; glow: string; typebar: string; lab
   },
 }
 
-// Gradientes do avatar-fallback por dificuldade
 const FALLBACK_GRADIENT: Record<string, string> = {
   easy:   'from-emerald-900 via-emerald-800 to-emerald-950',
   medium: 'from-amber-900 via-yellow-800 to-amber-950',
@@ -79,7 +80,6 @@ function formatCountdown(ms: number): string {
   return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`
 }
 
-// ─── Fallback: avatar com inicial do nome ─────────────────────────────────────
 function SpriteFallback({ name, difficulty }: { name: string; difficulty: string }) {
   const initial = name.trim().charAt(0).toUpperCase()
   const grad    = FALLBACK_GRADIENT[difficulty] ?? FALLBACK_GRADIENT.hard
@@ -88,13 +88,11 @@ function SpriteFallback({ name, difficulty }: { name: string; difficulty: string
 
   return (
     <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
-      <div
-        className={cn(
-          'w-20 h-20 rounded-2xl ring-2 flex items-center justify-center',
-          'bg-gradient-to-br select-none',
-          grad, ringCls,
-        )}
-      >
+      <div className={cn(
+        'w-20 h-20 rounded-2xl ring-2 flex items-center justify-center',
+        'bg-gradient-to-br select-none',
+        grad, ringCls,
+      )}>
         <span className={cn('text-4xl font-black font-display tracking-tighter', textCls)}>
           {initial}
         </span>
@@ -104,8 +102,9 @@ function SpriteFallback({ name, difficulty }: { name: string; difficulty: string
   )
 }
 
-// ─── Sprite com fallback ──────────────────────────────────────────────────────
-function MobSprite({ aegisName, mobId, name, difficulty }: { aegisName?: string; mobId: number; name: string; difficulty: string }) {
+function MobSprite({ aegisName, mobId, name, difficulty }: {
+  aegisName?: string; mobId: number; name: string; difficulty: string
+}) {
   const srcs = buildSrcList(aegisName, mobId)
   const [idx, setIdx]       = useState(0)
   const [failed, setFailed] = useState(srcs.length === 0)
