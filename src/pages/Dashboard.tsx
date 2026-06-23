@@ -310,7 +310,7 @@ export function Dashboard() {
             {/* Goal selector */}
             <GoalSelector value={goalMode} onChange={setGoalMode} topTarget={topTarget} />
 
-            {/* MVP Grid */}
+            {/* MVP Grid — 5 colunas a partir de xl */}
             {filtered.length === 0 ? (
               <div className="text-center py-16 text-rag-muted">
                 <p className="text-4xl mb-3">🏆</p>
@@ -318,7 +318,7 @@ export function Dashboard() {
                 <p className="text-xs mt-1 text-rag-faint">Tente outro status ou limpe a busca.</p>
               </div>
             ) : (
-              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
                 {filtered.map(mvp => (
                   <MVPCard
                     key={mvp.id}

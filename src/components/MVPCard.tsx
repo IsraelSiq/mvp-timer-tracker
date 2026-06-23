@@ -35,7 +35,7 @@ const FRAME: Record<string, { border: string; glow: string; typebar: string; lab
     border:  'from-red-400 via-rose-600 to-red-400',
     glow:    'shadow-[0_0_22px_4px_rgba(239,68,68,0.45)]',
     typebar: 'from-red-900/80 to-red-800/60',
-    label:   'Lend\u00e1rio',
+    label:   'Lendário',
   },
 }
 
@@ -48,14 +48,14 @@ const STATUS_EXTRA_GLOW: Record<string, string> = {
 }
 
 const STATUS_LABEL: Record<string, { text: string; color: string }> = {
-  'mvp':         { text: 'Aguardando kill',  color: 'text-rag-muted' },
-  'window-open': { text: '\u2728 Janela aberta!', color: 'text-green-400' },
-  'soon':        { text: '\u23f0 Nascendo em breve', color: 'text-yellow-400' },
-  'far':         { text: 'Longe',            color: 'text-rag-muted' },
+  'mvp':         { text: 'Aguardando kill',      color: 'text-rag-muted' },
+  'window-open': { text: '✨ Janela aberta!',     color: 'text-green-400' },
+  'soon':        { text: '⏰ Nascendo em breve',  color: 'text-yellow-400' },
+  'far':         { text: 'Longe',                color: 'text-rag-muted' },
 }
 
 function formatCountdown(ms: number): string {
-  if (ms <= 0) return 'Dispon\u00edvel'
+  if (ms <= 0) return 'Disponível'
   const h = Math.floor(ms / 3600000)
   const m = Math.floor((ms % 3600000) / 60000)
   const s = Math.floor((ms % 60000) / 1000)
@@ -77,7 +77,7 @@ function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: numb
   if (failed || srcs.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <Skull size={48} className="text-rag-muted/30" />
+        <Skull size={56} className="text-rag-muted/30" />
       </div>
     )
   }
@@ -87,10 +87,10 @@ function MobSprite({ aegisName, mobId, name }: { aegisName?: string; mobId: numb
       key={srcs[idx]}
       src={srcs[idx]}
       alt={name}
-      width={96}
-      height={96}
+      width={128}
+      height={128}
       loading="lazy"
-      className="w-24 h-24 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
+      className="w-32 h-32 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
       style={{ imageRendering: 'pixelated' }}
       onError={() => {
         if (idx + 1 < srcs.length) setIdx(i => i + 1)
@@ -197,7 +197,7 @@ export function MVPCard({
 
         {/* ── ARTE: sprite centralizado em fundo escuro ─────────────────── */}
         <div className="relative flex items-center justify-center bg-gradient-to-b
-                        from-[#080a14] to-[#0d1020] h-28 overflow-hidden">
+                        from-[#080a14] to-[#0d1020] h-36 overflow-hidden">
           {/* runas decorativas de fundo */}
           <div className="absolute inset-0 opacity-[0.04] select-none pointer-events-none
                           flex items-center justify-center text-6xl text-white">
@@ -216,7 +216,7 @@ export function MVPCard({
           <span className="text-white/80 italic">MVP Boss &mdash; {frame.label}</span>
           <div className="flex items-center gap-1 text-rag-muted">
             <MapPin size={9} />
-            <span className="truncate max-w-[90px] text-white/60">{data.map}</span>
+            <span className="truncate max-w-[80px] text-white/60">{data.map}</span>
           </div>
         </div>
 
@@ -234,7 +234,7 @@ export function MVPCard({
           <p className="text-[10px] text-rag-muted/50 font-mono mt-0.5">#{data.mobId}</p>
         </div>
 
-        {/* ── FOOTER: a\u00e7\u00f5es + respawn range ──────────────────────────────── */}
+        {/* ── FOOTER: ações + respawn range ──────────────────────────────── */}
         <div className="px-2.5 pb-2.5 pt-1.5 flex items-center justify-between gap-2
                         bg-gradient-to-r from-[#0e1022] to-[#0c0f20]
                         border-t border-white/5">
