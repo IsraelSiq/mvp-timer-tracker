@@ -47,24 +47,44 @@ function ElementBadge({ name }: { name: string }) {
   )
 }
 
-function MobImage({ src, name }: { src?: string; name: string }) {
-  const [err, setErr] = useState(false)
-  useEffect(() => { setErr(false) }, [src])
-  if (!src || err) {
+function MobImage({ mobId, name, pngUrl }: { mobId: number; name: string; pngUrl?: string }) {
+  const gifUrl = mobId > 0
+    ? `https://static.divine-pride.net/images/mobs/gif/${mobId}.gif`
+    : null
+  const fallbackUrl = pngUrl ?? (mobId > 0 ? `https://static.divine-pride.net/images/mobs/png/${mobId}.png` : null)
+
+  const [src, setSrc] = useState<string | null>(gifUrl ?? fallbackUrl)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    setSrc(gifUrl ?? fallbackUrl)
+    setFailed(false)
+  }, [mobId])
+
+  if (!src || failed) {
     return (
       <div className="flex items-center justify-center w-20 h-20 rounded-xl bg-rag-bg border border-rag-border shrink-0">
         <Skull size={32} className="text-rag-muted/30" />
       </div>
     )
   }
+
   return (
     <img
       src={src}
       alt={name}
+      width={80}
+      height={80}
       className="w-20 h-20 object-contain rounded-xl bg-rag-bg border border-rag-border shrink-0 drop-shadow-lg"
       style={{ imageRendering: 'pixelated' }}
       loading="lazy"
-      onError={() => setErr(true)}
+      onError={() => {
+        if (src === gifUrl && fallbackUrl) {
+          setSrc(fallbackUrl)
+        } else {
+          setFailed(true)
+        }
+      }}
     />
   )
 }
@@ -100,7 +120,7 @@ export function MvpDetailsPanel({ item, onClose, onRegisterKill }: Props) {
       >
         {/* Header com imagem */}
         <div className="flex items-center gap-4 px-5 py-4 border-b border-rag-border">
-          <MobImage src={item.image} name={item.name} />
+          <MobImage mobId={item.mobId} name={item.name} pngUrl={item.image} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="font-body font-bold text-rag-text text-base leading-tight">{item.name}</h2>
